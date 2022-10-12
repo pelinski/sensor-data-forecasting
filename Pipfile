@@ -1,20 +1,9 @@
 [[source]]
-url = "https://download.pytorch.org/whl/cu116"
-verify_ssl = true
-name = "pytorch-cuda"
-
-[[source]]
-url = "https://download.pytorch.org/whl/cpu"
-verify_ssl = true
-name = "pytorch-cpu"
-
-[[source]]
 url = "https://pypi.org/simple"
 verify_ssl = true
 name = "pypi"
 
 [packages]
-torch = "*"
 tqdm = "*"
 numpy = "*"
 
