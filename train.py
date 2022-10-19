@@ -1,20 +1,32 @@
 import torch
 from tqdm import tqdm
 import numpy as np
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, random_split
+from DataSyncer import SyncedDataLoader
 from lstm import CustomLSTM
+from dataset import forecastingDataset
 
 num_epochs = 5
 
 batch_size = 32
 sequence_length = 8
-input_size = 20
-hidden_size = 12
+input_size = 8 # num sensors
+hidden_size = 8 # num sensors
         
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
-train_dataset = torch.utils.data.TensorDataset(torch.rand(10*batch_size, sequence_length, input_size), torch.rand(10*batch_size, sequence_length, hidden_size))
-test_dataset = torch.utils.data.TensorDataset(torch.rand(10*batch_size, sequence_length, input_size), torch.rand(10*batch_size, sequence_length, hidden_size))
+num_sensors = 8 # per Bela
+
+sensor_data = SyncedDataLoader(path="data/synced/RX1",id="RX1",num_sensors=num_sensors)
+dataset = forecastingDataset(sensor_data, sequence_length)
+
+train_count = int(0.7 * dataset.__len__())
+valid_count = int(0.2 * dataset.__len__())
+test_count = dataset.__len__() - train_count - valid_count
+train_dataset, valid_dataset, test_dataset = torch.utils.data.random_split(
+    dataset, (train_count, valid_count, test_count)
+)
+
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, pin_memory=True)
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, pin_memory=True)
 
@@ -27,8 +39,8 @@ print("--- Device: {} ---".format(device))
 
 for epoch in range(num_epochs):
     for batch_idx, (data, targets) in enumerate (tqdm(train_loader)):
-        data = data.to(device=device, non_blocking=True)
-        targets = targets.to(device=device, non_blocking=True)
+        data = data.to(device=device, non_blocking=True) # (batch_size, seq_length, input_size)
+        targets = targets.to(device=device, non_blocking=True) # (batch_size, seq_length, hidden_seq)
         
         hidden_seq, (h_t, c_t) = model(data)
         loss = criterion(hidden_seq, targets)
