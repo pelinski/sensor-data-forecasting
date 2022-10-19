@@ -7,6 +7,7 @@ from torch.utils.data import DataLoader, random_split
 from DataSyncer import SyncedDataLoader
 from lstm import CustomLSTM
 from dataset import forecastingDataset
+from plotter import get_html_plot
 
 
 
@@ -34,7 +35,7 @@ train_dataset, validation_dataset, test_dataset = torch.utils.data.random_split(
     dataset, (train_count, validation_count, test_count)
 )
 # Dataloaders
-train_loader = DataLoader(train_dataset, batch_size=hyperparams["batch_size"], shuffle=True, pin_memory=True)
+train_loader = DataLoader(train_dataset, batch_size=hyperparams["batch_size"], shuffle=False, pin_memory=True)
 validation_loader = DataLoader(validation_dataset, batch_size=hyperparams["batch_size"], shuffle=False, pin_memory=True)
 test_loader = DataLoader(test_dataset, batch_size=hyperparams["batch_size"], shuffle=False, pin_memory=True)
 
@@ -49,12 +50,17 @@ else:
     optimizer = None
 
 # epoch loop
+plot_period = 1
+plot_number = 5
 for epoch in range(hyperparams["epochs"]):
     
     print("| Epoch: {} |".format(epoch))
     
     # training loop
     train_it_losses = np.array([])
+    train_sample_plots_outputs = []
+    train_sample_plots_targets = []
+    
     for batch_idx, (data, targets) in enumerate (tqdm(train_loader)):
         data = data.to(device=device, non_blocking=True) # (batch_size, seq_length, input_size)
         targets = targets.to(device=device, non_blocking=True) # (batch_size, seq_length, hidden_seq)
@@ -68,8 +74,19 @@ for epoch in range(hyperparams["epochs"]):
         train_loss.backward()
         optimizer.step() 
         
+        # bokeh plot of some batches every 10 epochs
+        if epoch%plot_period == 0 and epoch!=0 and batch_idx <= plot_number:
+            train_sample_plots_outputs.append(hidden_seq)
+            train_sample_plots_targets.append(targets)
+            if batch_idx == plot_number:
+                wandb.log({"sensor_plot_train":wandb.Html(get_html_plot(train_sample_plots_outputs, train_sample_plots_targets)), "epoch":epoch}, commit=False)
+        
+        
     # validation loop
     validation_it_losses = np.array([])
+    validation_sample_plots_outputs = []
+    validation_sample_plots_targets = []
+    
     for batch_idx, (data, targets) in enumerate (tqdm(validation_loader)):
         data = data.to(device=device, non_blocking=True) # (batch_size, seq_length, input_size)
         targets = targets.to(device=device, non_blocking=True) # (batch_size, seq_length, hidden_seq)
@@ -77,32 +94,16 @@ for epoch in range(hyperparams["epochs"]):
         hidden_seq, (h_t, c_t) = model(data)
         validation_loss = criterion(hidden_seq, targets)
         validation_it_losses = np.append(validation_it_losses,validation_loss.item())
+        
+       # bokeh plot of some batches every 10 epochs
+        if epoch%plot_period == 0 and epoch!=0 and batch_idx <= plot_number:
+            validation_sample_plots_outputs.append(hidden_seq)
+            validation_sample_plots_targets.append(targets)
+            if batch_idx == plot_number:
+                wandb.log({"sensor_plot_validation":wandb.Html(get_html_plot(validation_sample_plots_outputs, validation_sample_plots_targets)), "epoch":epoch}, commit=False)
+        
     
-    # TODO push hidden_seq and targets to wandb to compare for each sensor
     wandb.log({"train_loss": train_it_losses.mean(), "validation_loss": validation_it_losses.mean(), "epoch": epoch}) # only log mean loss per epoch
         
-
-# # Check accuracy on training & test to see how good our model
-# def check_accuracy(loader, model):
-#     # Set model to eval
-#     model.eval()
-    
-#     error = []
-
-#     with torch.no_grad():
-#         for x, y in loader:
-#             x = x.to(device=device).squeeze(1)
-#             y = y.to(device=device)
-
-#             hidden_seq, _= model(x)
-#             error.append(((hidden_seq-y)**2).mean().item())
-
-#     # Toggle model back to train
-#     model.train()
-#     return np.mean(error)
-
-
-#print(f"Accuracy on training set: {check_accuracy(train_loader, model)*100:2f}")
-#print(f"Accuracy on validation set: {check_accuracy(validation_loader, model)*100:2f}")
 
 run.finish()
