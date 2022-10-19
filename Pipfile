@@ -7,6 +7,7 @@ name = "pypi"
 tqdm = "*"
 numpy = "*"
 bela-data-syncer = {git = "https://github.com/pelinski/bela-data-syncer.git"}
+wandb = "*"
 
 [dev-packages]
 yapf = "*"
