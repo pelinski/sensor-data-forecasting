@@ -1,6 +1,9 @@
 import torch
 import unittest
+import numpy as np
 from lstm import CustomLSTM
+from DataSyncer import SyncedDataLoader
+from dataset import forecastingDataset
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -35,6 +38,20 @@ class testLSTM(unittest.TestCase):
         num_params = 4 * (input_size * hidden_size + hidden_size * hidden_size + hidden_size)
         
         self.assertEqual(total_params, num_params, "total number of parameters should be 4 * (input_size * hidden_size + hidden_size * hidden_size + hidden_size)" )
+    
+class test_dataset(unittest.TestCase):
+    
+    def test_inputs_and_targets(self):
+        num_sensors = 8
+        seq_length = 16 
+        sensor_data = SyncedDataLoader(path="test-data/RX1",id="RX1",num_sensors=num_sensors)
+        dataset = forecastingDataset(sensor_data, seq_length)
+        
+        self.assertEqual(dataset.inputs.shape,dataset.targets.shape, "inputs and targets should have the same shape")
+        
+        self.assertTrue(np.any(dataset.inputs[1:]-dataset.targets[:-1]<0.00001),"inputs and targets should hold the same values but offset by one sequence")
+        
+            
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

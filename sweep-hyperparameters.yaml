@@ -1,0 +1,19 @@
+program: train.py
+project: sensor-data-forecasting_lstm
+method: bayes
+metric:
+  name: validation_loss
+  goal: minimize
+parameters:
+  epochs:
+    value: 200
+  batch_size:
+    values: [16, 32, 64, 128, 256, 512]
+  sequence_length:
+    values: [16, 32, 64, 128, 256, 512, 1024]
+  learning_rate:
+    distribution: "uniform"
+    min: 0.0001
+    max: 0.1
+  optimizer:
+    values: ["adam", "sgd"]
