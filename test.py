@@ -1,9 +1,9 @@
 import torch
 import unittest
 import numpy as np
-from lstm import CustomLSTM
 from DataSyncer import SyncedDataLoader
-from dataset import forecastingDataset
+from models.lstm import CustomLSTM
+from dataset.dataset import forecastingDataset
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

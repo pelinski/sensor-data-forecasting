@@ -10,8 +10,9 @@ class forecastingDataset(Dataset):
         num_sequences = int(np.ceil(data.shape[0] / self.seq_len))
         padding = int(num_sequences * self.seq_len - data.shape[0])
         
-        self.__data = np.append(data, np.zeros((padding,8)), axis=0)
-        self.__sequences = np.reshape(self.data, (num_sequences, self.seq_len, 8))
+        num_sensors = data.shape[1]
+        self.__data = np.append(data, np.zeros((padding,num_sensors)), axis=0)
+        self.__sequences = np.reshape(self.data, (num_sequences, self.seq_len, num_sensors))
         
         self.__inputs = self.sequences[:-1] # (num_sequences-1, seq_length, num_sensors)
         self.__targets = self.sequences[1:] # (num_sequences-1, seq_length, num_sensors)
