@@ -11,8 +11,11 @@ bokeh = "*"
 bela-data-syncer = {git = "https://github.com/pelinski/bela-data-syncer.git"}
 
 [dev-packages]
-yapf = "*"
 jupyter-bokeh = "*"
+black = "*"
 
 [requires]
 python_version = "3.9"
+
+[pipenv]
+allow_prereleases = true
