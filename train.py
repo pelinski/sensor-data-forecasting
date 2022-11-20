@@ -5,27 +5,26 @@ import numpy as np
 from torch.utils.data import DataLoader, random_split
 
 from DataSyncer import SyncedDataLoader
-from lstm import CustomLSTM
-from dataset import forecastingDataset
-from plotter import get_html_plot
+from models.lstm import CustomLSTM
+from dataset.dataset import forecastingDataset
+from utils.plotter import get_html_plot
 
-
-
-run = wandb.init()
+run = wandb.init(project='sensor-data-forecasting-lstm')
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 print("Running on device: {}".format(device))
 
 # Hyperparameters either come from wandb or are default values
-hyperparams ={"epochs": wandb.config.epochs if wandb.config.__contains__("epochs") else 200, 
-                  "batch_size": wandb.config.batch_size if wandb.config.__contains__("batch_size") else 32, 
-                  "sequence_length": wandb.config.sequence_length if wandb.config.__contains__("sequence_length") else 16,
-                  "learning_rate": wandb.config.learning_rate if wandb.config.__contains__("learning_rate") else 0.001, 
-                  "optimizer":wandb.config.optimizer if wandb.config.__contains__("optimizer") else "adam"}
+hyperparams ={"num_sensors": wandb.config.num_sensors if wandb.config.__contains__("epochs") else 2,   
+            "data_path":  wandb.config.data_path if wandb.config.__contains__("data_path") else "dataset/data/chaos-bells-2/processed/RX0",   
+            "epochs": wandb.config.epochs if wandb.config.__contains__("epochs") else 5, 
+            "batch_size": wandb.config.batch_size if wandb.config.__contains__("batch_size") else 32, 
+            "sequence_length": wandb.config.sequence_length if wandb.config.__contains__("sequence_length") else 16,
+            "learning_rate": wandb.config.learning_rate if wandb.config.__contains__("learning_rate") else 0.001, 
+            "optimizer":wandb.config.optimizer if wandb.config.__contains__("optimizer") else "adam"}
         
-
+        
 # Load synced data
-num_sensors = 8 # per Bela
-sensor_data = SyncedDataLoader(path="data/synced/RX1",id="RX1",num_sensors=num_sensors)
+sensor_data = SyncedDataLoader(path=hyperparams["data_path"],id="RX1",num_sensors=hyperparams["num_sensors"])
 dataset = forecastingDataset(sensor_data, hyperparams["sequence_length"])
 # Split dataset
 train_count = int(0.7 * dataset.__len__())
@@ -40,7 +39,7 @@ validation_loader = DataLoader(validation_dataset, batch_size=hyperparams["batch
 test_loader = DataLoader(test_dataset, batch_size=hyperparams["batch_size"], shuffle=False, pin_memory=True)
 
 # Model, criterion and optimizer
-model = CustomLSTM(input_size=num_sensors, hidden_size=num_sensors).to(device=device, non_blocking=True)
+model = CustomLSTM(input_size=hyperparams["num_sensors"], hidden_size=hyperparams["num_sensors"]).to(device=device, non_blocking=True)
 criterion = torch.nn.MSELoss()
 if hyperparams["optimizer"] == "adam":
     optimizer = torch.optim.Adam(model.parameters(), lr=hyperparams["learning_rate"])
@@ -50,8 +49,7 @@ else:
     optimizer = None
 
 # epoch loop
-plot_period = 1
-plot_number = 5
+plot_period, plot_number = 1,5
 for epoch in range(hyperparams["epochs"]):
     
     print("| Epoch: {} |".format(epoch))

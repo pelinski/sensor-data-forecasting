@@ -1,0 +1,14 @@
+data_path:
+  value: "dataset/data/chaos-bells-2/processed/RX0"
+num_sensors:
+  value: 2
+epochs:
+  value: 200
+batch_size:
+  value: 32
+sequence_length:
+  value: 16
+learning_rate:
+  value: 0.001
+optimizer:
+  value: "adam"
