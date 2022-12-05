@@ -18,8 +18,8 @@ def get_html_plot(outputs, targets):
             outputs_batch = outputs[batch_idx]
             targets_batch = targets[batch_idx]
                     
-            outputs_r = torch.reshape(outputs_batch[:,:,sensor], (outputs_batch.shape[0]*outputs_batch.shape[1],1)).squeeze().detach().numpy()
-            targets_r = torch.reshape(targets_batch[:,:,sensor], (targets_batch.shape[0]*targets_batch.shape[1],1)).squeeze().detach().numpy()
+            outputs_r = torch.reshape(outputs_batch[:,:,sensor], (outputs_batch.shape[0]*outputs_batch.shape[1],1)).squeeze().detach().cpu().numpy()
+            targets_r = torch.reshape(targets_batch[:,:,sensor], (targets_batch.shape[0]*targets_batch.shape[1],1)).squeeze().detach().cpu().numpy()
             
             x = np.arange(0, len(outputs_r))
 

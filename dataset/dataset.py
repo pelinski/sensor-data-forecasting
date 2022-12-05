@@ -2,7 +2,7 @@ import torch
 from torch.utils.data import Dataset
 import numpy as np
 
-class forecastingDataset(Dataset):
+class ForecastingTorchDataset(Dataset):
     def __init__(self, data, seq_len):
         self.__seq_len = seq_len
         
