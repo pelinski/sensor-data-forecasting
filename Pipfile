@@ -6,13 +6,14 @@ name = "pypi"
 [packages]
 tqdm = "*"
 numpy = "*"
-wandb = "*"
-bokeh = "*"
 bela-data-syncer = {git = "https://github.com/pelinski/bela-data-syncer.git"}
+wandb = "==0.12.21"
+pprintpp = "*"
+bokeh = "==2.4.3"
 
 [dev-packages]
 jupyter-bokeh = "*"
-black = "*"
+autopep8 = "*"
 
 [requires]
 python_version = "3.9"
