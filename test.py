@@ -95,8 +95,6 @@ class test_dataset(unittest.TestCase):
                         "inputs and targets should hold the same values but offset by one sequence")
 
 
-# TODO: test for transformers
-
 if __name__ == '__main__':
     unittest.main(verbosity=2)
     exit()

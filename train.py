@@ -14,11 +14,11 @@ device = torch.device(
     'cuda') if torch.cuda.is_available() else torch.device('cpu')
 print("Running on device: {}".format(device))
 
-run = wandb.init()
 
 # Load hyperparameters and update wandb config
 hyperparams = load_hyperparams()
 pp.pprint(hyperparams, sort_dicts=False)
+run = wandb.init(project="sensor-data-forecasting-{}".format(hyperparams["model"]))
 wandb.config.update(hyperparams)
 
 # Load synced data
