@@ -49,7 +49,7 @@ optimizer = load_optimizer(model, hyperparams)
 
 # epoch loop
 plot_period, plot_number = 1, 5
-for epoch in range(1,hyperparams["epochs"]+1):
+for epoch in range(1, hyperparams["epochs"]+1):
 
     print("█▓░ Epoch: {} ░▓█".format(epoch))
 
@@ -61,11 +61,11 @@ for epoch in range(1,hyperparams["epochs"]+1):
     for batch_idx, (data, targets) in enumerate(tqdm(train_loader)):
         # (batch_size, seq_length, input_size)
         data = data.to(device=device, non_blocking=True)
-        # (batch_size, seq_length, hidden_seq)
+        # (batch_size, seq_length, out_size)
         targets = targets.to(device=device, non_blocking=True)
 
-        hidden_seq, (h_t, c_t) = model(data)
-        train_loss = criterion(hidden_seq, targets)
+        out = model(data)
+        train_loss = criterion(out, targets)
         train_it_losses = np.append(train_it_losses, train_loss.item())
 
         # update
@@ -75,7 +75,7 @@ for epoch in range(1,hyperparams["epochs"]+1):
 
         # bokeh plot of some batches every 10 epochs
         if epoch % plot_period == 0 and epoch != 0 and batch_idx <= plot_number:
-            train_sample_plots_outputs.append(hidden_seq)
+            train_sample_plots_outputs.append(out)
             train_sample_plots_targets.append(targets)
             if batch_idx == plot_number:
                 wandb.log({"sensor_plot_train": wandb.Html(get_html_plot(
@@ -89,17 +89,17 @@ for epoch in range(1,hyperparams["epochs"]+1):
     for batch_idx, (data, targets) in enumerate(tqdm(validation_loader)):
         # (batch_size, seq_length, input_size)
         data = data.to(device=device, non_blocking=True)
-        # (batch_size, seq_length, hidden_seq)
+        # (batch_size, seq_length, out_size)
         targets = targets.to(device=device, non_blocking=True)
 
-        hidden_seq, (h_t, c_t) = model(data)
-        validation_loss = criterion(hidden_seq, targets)
+        out = model(data)
+        validation_loss = criterion(out, targets)
         validation_it_losses = np.append(
             validation_it_losses, validation_loss.item())
 
        # bokeh plot of some batches every 10 epochs
         if epoch % plot_period == 0 and epoch != 0 and batch_idx <= plot_number:
-            validation_sample_plots_outputs.append(hidden_seq)
+            validation_sample_plots_outputs.append(out)
             validation_sample_plots_targets.append(targets)
             if batch_idx == plot_number:
                 wandb.log({"sensor_plot_validation": wandb.Html(get_html_plot(

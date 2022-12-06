@@ -6,6 +6,14 @@ import torch.nn as nn
     
 class CustomLSTM(nn.Module): # short version using matrices
     def __init__(self, input_size, hidden_size):
+        """LSTM 
+        
+        Source: https://towardsdatascience.com/building-a-lstm-by-hand-on-pytorch-59c02a4ec091
+
+        Args:
+            input_size (int): Input size of the network 
+            hidden_size (int): Size of the hidden state
+        """
         super().__init__()
         self.input_size = input_size
         self.hidden_size = hidden_size
@@ -20,10 +28,20 @@ class CustomLSTM(nn.Module): # short version using matrices
         for weight in self.parameters():
             weight.data.uniform_(-stdv, stdv)
             
-    def forward(self,x,init_states=None):
-        """
-        assumes x is of shape (batch_size, sequence_size, input_size)
-        """
+    def forward(self,x,init_states=None, return_states=False):
+        """LSTM forward pass
+
+        Args:
+            x (torch.Tensor): Input torch tensor of shape (batch_size, seq_len, input_size)
+            init_states (torch.Tensor, optional): Initial states for output of the network (h_t) and the long-term memory (c_t). Defaults to None.
+            return_states (bool, optional): Returns hidden_state, (h_t, c_t) if set to True, otherwise returns only hidden_state . Defaults to False.
+
+        Returns:
+            if return_states is True:
+                hidden_state (torch.Tensor), (h_t (torch.Tensor), c_t (torch.Tensor)): Hidden state, network output and long-term memory
+            if return_states is False:
+                hidden_state (torch.Tensor): Hidden state
+        """      
         batch_size, seq_size, _ = x.size()
         hidden_seq = []
 
@@ -59,6 +77,8 @@ class CustomLSTM(nn.Module): # short version using matrices
         )  # (sequence_length, batch_size, hidden_size)
         hidden_seq = hidden_seq.transpose(0,
                                           1).contiguous()  #(batch_size, sequence_length, hidden_size). contiguous returns a tensor contiguous in memory
-
-        return hidden_seq, (h_t, c_t)
+        if return_states:
+            return hidden_seq, (h_t, c_t)
+        else:
+            return hidden_seq
     

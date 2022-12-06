@@ -9,6 +9,11 @@ from models.transformer import TransformerEncoder
 
 
 def load_hyperparams():
+    """Loads hyperparameters from a config yaml file.
+
+    Returns:
+        (dict): hyperparams
+    """
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -29,17 +34,18 @@ def load_hyperparams():
                    "batch_size": hp["batch_size"] if "batch_size" in hp else 32,
                    "sequence_length": hp["sequence_length"] if "sequence_length" in hp else 16,
                    "learning_rate": hp["learning_rate"] if "learning_rate" in hp else 0.001,
-                   "optimizer": hp["optimizer"] if "optimizer" in hp else "adam"}
-
-    if hp["model"] == "transformer" and "transformer" in hp:
-        hyperparams.update({"transformer_params":
-                            {"d_model": hp["transformer"]["d_model"] if "d_model" in hp["transformer"] else 64,
-                             "embedding_size_src": hp["transformer"]["embedding_size_src"] if "embedding_size_src" in hp["transformer"] else 8,
-                             "embedding_size_tgt": hp["transformer"]["embedding_size_tgt"] if "embedding_size_tgt" in hp["transformer"] else 8,
-                             "num_heads": hp["transformer"]["num_heads"] if "num_heads" in hp["transformer"] else 16,
-                             "dim_feedforward": hp["transformer"]["dim_feedforward"] if "dim_feedforward" in hp["transformer"] else 256,
-                             "dropout": hp["transformer"]["dropout"] if "dropout" in hp["transformer"] else 0.2,
-                             "num_encoder_layers": hp["transformer"]["num_encoder_layers"] if "num_encoder_layers" in hp["transformer"] else 7,
+                   "optimizer": hp["optimizer"] if "optimizer" in hp else "adam",
+                   "model_params": hp["model_params"] if "model_params" in hp else {},
+                   "device": torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')}
+    if hp["model"] == "transformer":
+        hyperparams.update({"model_params":
+                            {"d_model": hyperparams["model_params"]["d_model"] if "d_model" in hyperparams["model_params"] else 64,
+                             "embedding_size_src": hyperparams["model_params"]["embedding_size_src"] if "embedding_size_src" in hyperparams["model_params"] else 8,
+                             "embedding_size_tgt": hyperparams["model_params"]["embedding_size_tgt"] if "embedding_size_tgt" in hyperparams["model_params"] else 8,
+                             "num_heads": hyperparams["model_params"]["num_heads"] if "num_heads" in hyperparams["model_params"] else 16,
+                             "dim_feedforward": hyperparams["model_params"]["dim_feedforward"] if "dim_feedforward" in hyperparams["model_params"] else 256,
+                             "dropout": hyperparams["model_params"]["dropout"] if "dropout" in hyperparams["model_params"] else 0.2,
+                             "num_encoder_layers": hyperparams["model_params"]["num_encoder_layers"] if "num_encoder_layers" in hyperparams["model_params"] else 7,
                              }
                             })
 
@@ -47,6 +53,14 @@ def load_hyperparams():
 
 
 def load_model(hyperparams):
+    """ Creates models based on hyperparameters.
+
+    Args:
+        hyperparams (dict): dict containing hyperparameters
+
+    Returns:
+        model (torch.nn.Module): Model based on hyperparameters
+    """
 
     device = torch.device(
         'cuda') if torch.cuda.is_available() else torch.device('cpu')
@@ -56,7 +70,7 @@ def load_model(hyperparams):
             device=device, non_blocking=True)
     elif hyperparams["model"] == "transformer":
         model = TransformerEncoder(
-            **hyperparams["transformer_params"]).to(device=device, non_blocking=True)
+            **hyperparams, **hyperparams["model_params"]).to(device=device, non_blocking=True)
     else:
         model = None
 
@@ -64,6 +78,15 @@ def load_model(hyperparams):
 
 
 def load_optimizer(model, hyperparams):
+    """Returns optimizer based on hyperparameters
+
+    Args:
+        model (torch.nn.Module): Torch model
+        hyperparams (dict): Dict containing hyperparameters
+
+    Returns:
+        optimizer (torch.optim): Optimizer
+    """
 
     if hyperparams["optimizer"] == "adam":
         optimizer = torch.optim.Adam(
