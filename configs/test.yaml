@@ -1,8 +1,10 @@
 model: "lstm"
-data_path: "dataset/data/chaos-bells-2/processed/RX0"
+dataset: "dataset/data/chaos-bells-2/processed/RX0"
 num_sensors: 2
 epochs: 1
 batch_size: 32
 seq_len: 16
 learning_rate: 0.001
 optimizer: "adam"
+embedding_size_src: 2
+embedding_size_tgt: 1
