@@ -18,7 +18,8 @@ print("Running on device: {}".format(device))
 # Load hyperparameters and update wandb config
 hyperparams = load_hyperparams()
 pp.pprint(hyperparams, sort_dicts=False)
-run = wandb.init(project="sensor-data-forecasting-{}".format(hyperparams["model"]))
+run = wandb.init(
+    project="sensor-data-forecasting-{}".format(hyperparams["model"]))
 wandb.config.update(hyperparams)
 
 # Load synced data
@@ -62,7 +63,8 @@ for epoch in range(1, hyperparams["epochs"]+1):
         # (batch_size, seq_length, input_size)
         data = data.to(device=device, non_blocking=True)
         # (batch_size, seq_length, out_size)
-        targets = targets.to(device=device, non_blocking=True)
+        targets = targets.to(device=device, non_blocking=True)[
+            :, :, 1:]  # remove piezo stick
 
         out = model(data)
         train_loss = criterion(out, targets)
@@ -90,7 +92,8 @@ for epoch in range(1, hyperparams["epochs"]+1):
         # (batch_size, seq_length, input_size)
         data = data.to(device=device, non_blocking=True)
         # (batch_size, seq_length, out_size)
-        targets = targets.to(device=device, non_blocking=True)
+        targets = targets.to(device=device, non_blocking=True)[
+            :, :, 1:]  # remove piezo stick
 
         out = model(data)
         validation_loss = criterion(out, targets)
