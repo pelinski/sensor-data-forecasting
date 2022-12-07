@@ -14,7 +14,7 @@ class TransformerEncoder(torch.nn.Module):
             num_heads (int, optional): Number of heads in the multihead attention. Defaults to 16.
             dim_feedforward (int, optional): Size of the feedforward network. Defaults to 256.
             dropout (float, optional): Dropout rate. Defaults to 0.2.
-            max_seq_len (int, optional): Maximum sequence length. Defaults to 16.
+            seq_len (int, optional): Maximum sequence length. Defaults to 16.
             num_encoder_layers (int, optional): Number of encoder layers. Defaults to 7.
         """
         super(TransformerEncoder, self).__init__()

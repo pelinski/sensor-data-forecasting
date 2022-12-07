@@ -24,7 +24,7 @@ def load_hyperparams():
                         default=2, type=int)
     parser.add_argument("--dataset", help="dataset path",
                         default='dataset/data/chaos-bells-2/processed/RX0', type=str)
-    parser.add_argument("--sequence_length", help="maximum sequence length",
+    parser.add_argument("--seq_len", help="maximum sequence length",
                         default=12, type=int)
     parser.add_argument("--batch_size", help="batch size",
                         default=32, type=int)
@@ -62,7 +62,7 @@ def load_hyperparams():
                    "data_path":  hp["data_path"] if "data_path" in hp else args.dataset,
                    "epochs": hp["epochs"] if "epochs" in hp else args.epochs,
                    "batch_size": hp["batch_size"] if "batch_size" in hp else args.batch_size,
-                   "sequence_length": hp["sequence_length"] if "sequence_length" in hp else args.sequence_length,
+                   "seq_len": hp["seq_len"] if "maximum sequence length" in hp else args.seq_len,
                    "learning_rate": hp["learning_rate"] if "learning_rate" in hp else args.learning_rate,
                    "optimizer": hp["optimizer"] if "optimizer" in hp else args.optimizer,
                    "model_params": hp["model_params"] if "model_params" in hp else {},
