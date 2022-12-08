@@ -85,7 +85,7 @@ class test_dataset(unittest.TestCase):
         num_sensors = 8
         seq_length = 16
         sensor_data = SyncedDataLoader(
-            path="test-data/RX1", id="RX1", num_sensors=num_sensors)
+            path="dataset/data/test/RX1", id="RX1", num_sensors=num_sensors)
         dataset = ForecastingTorchDataset(sensor_data, seq_length)
 
         self.assertEqual(dataset.inputs.shape, dataset.targets.shape,

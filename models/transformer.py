@@ -14,7 +14,7 @@ class TransformerEncoder(torch.nn.Module):
             num_heads (int, optional): Number of heads in the multihead attention. Defaults to 16.
             dim_feedforward (int, optional): Size of the feedforward network. Defaults to 256.
             dropout (float, optional): Dropout rate. Defaults to 0.2.
-            max_seq_len (int, optional): Maximum sequence length. Defaults to 16.
+            seq_len (int, optional): Maximum sequence length. Defaults to 16.
             num_encoder_layers (int, optional): Number of encoder layers. Defaults to 7.
         """
         super(TransformerEncoder, self).__init__()
@@ -35,9 +35,6 @@ class TransformerEncoder(torch.nn.Module):
         self.Encoder = Encoder(
             self.d_model, self.num_heads, self.dim_feedforward, self.dropout, self.num_encoder_layers)
         self.OutputLayer = OutputLayer(self.embedding_size_tgt, self.d_model)
-
-        self.InputLayerEncoder.init_weights()
-        self.OutputLayer.init_weights()
 
     def forward(self, src):
         """Transformer Encoder forward pass
@@ -89,9 +86,9 @@ class InputLayer(torch.nn.Module):
         self.ReLU = torch.nn.ReLU()
         self.PositionalEncoding = PositionalEncoding(d_model, max_len, dropout)
 
-    def init_weights(self, initrange=0.1):
-        self.Linear.bias.data.zero_()
-        self.Linear.weight.data.uniform_(-initrange, initrange)
+        with torch.no_grad():
+            self.Linear.weight.data.normal_(mean=0.0, std=1.0)
+            self.Linear.bias.data.zero_()
 
     def forward(self, src):
         """Input layer forward pass
@@ -158,9 +155,9 @@ class OutputLayer(torch.nn.Module):
         self.embedding_size = embedding_size
         self.Linear = torch.nn.Linear(d_model, embedding_size, bias=True)
 
-    def init_weights(self, initrange=0.1):
-        self.Linear.bias.data.zero_()
-        self.Linear.weight.data.uniform_(-initrange, initrange)
+        with torch.no_grad():
+            self.Linear.weight.data.normal_(mean=0.0, std=1.0)
+            self.Linear.bias.data.zero_()
 
     def forward(self, encoder_out):
         """Output Layer forward pass

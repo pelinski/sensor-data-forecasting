@@ -3,11 +3,11 @@ import math
 import torch
 import torch.nn as nn
 
-    
-class CustomLSTM(nn.Module): # short version using matrices
+
+class CustomLSTM(nn.Module):  # short version using matrices
     def __init__(self, input_size, hidden_size):
         """LSTM 
-        
+
         Source: https://towardsdatascience.com/building-a-lstm-by-hand-on-pytorch-59c02a4ec091
 
         Args:
@@ -22,13 +22,13 @@ class CustomLSTM(nn.Module): # short version using matrices
         self.U = nn.Parameter(torch.Tensor(hidden_size, hidden_size*4))
         self.bias = nn.Parameter(torch.Tensor(hidden_size*4))
         self.init_weights()
-        
+
     def init_weights(self):
         stdv = 1.0 / math.sqrt(self.hidden_size)
         for weight in self.parameters():
             weight.data.uniform_(-stdv, stdv)
-            
-    def forward(self,x,init_states=None, return_states=False):
+
+    def forward(self, x, init_states=None, return_states=False):
         """LSTM forward pass
 
         Args:
@@ -41,7 +41,7 @@ class CustomLSTM(nn.Module): # short version using matrices
                 hidden_state (torch.Tensor), (h_t (torch.Tensor), c_t (torch.Tensor)): Hidden state, network output and long-term memory
             if return_states is False:
                 hidden_state (torch.Tensor): Hidden state
-        """      
+        """
         batch_size, seq_size, _ = x.size()
         hidden_seq = []
 
@@ -51,34 +51,39 @@ class CustomLSTM(nn.Module): # short version using matrices
             # (batch_size, hidden_size), (batch_size, hidden_size)
         else:
             h_t, c_t = init_states
-            
+
         hsz = self.hidden_size
-        
+
         for t in range(seq_size):
-            x_t = x[:, t, :] # (batch_size, input_size)
+            x_t = x[:, t, :]  # (batch_size, input_size)
             # batch the computations into a single matrix multiplication
-            gates = x_t@self.W + h_t@self.U + self.bias             # @ is for matrix multiplication
-            
-            i_t = torch.sigmoid(gates[:, :hsz]) # input gate (batch_size, hidden_size)
-            f_t = torch.sigmoid(gates[:, hsz:hsz*2]) # forget gate (batch_size, hidden_size)
-            g_t = torch.tanh(gates[:, hsz*2:hsz*3]) # candidate gate (batch_size, hidden_size)
-            o_t = torch.sigmoid(gates[:, hsz*3:]) # output gate (batch_size, hidden_size)
-            
+            # @ is for matrix multiplication
+            gates = x_t@self.W + h_t@self.U + self.bias
+
+            # input gate (batch_size, hidden_size)
+            i_t = torch.sigmoid(gates[:, :hsz])
+            # forget gate (batch_size, hidden_size)
+            f_t = torch.sigmoid(gates[:, hsz:hsz*2])
+            # candidate gate (batch_size, hidden_size)
+            g_t = torch.tanh(gates[:, hsz*2:hsz*3])
+            # output gate (batch_size, hidden_size)
+            o_t = torch.sigmoid(gates[:, hsz*3:])
+
             c_t = f_t * c_t + i_t * g_t  # (batch_size, hidden_size)
             h_t = o_t * torch.tanh(c_t)  # (batch_size, hidden_size)
-            
-            hidden_seq.append(h_t.unsqueeze(0))  # h_t -->(1, batch_size, hidden_size)
-                # hidden_seq is a list of sequence_length items, each of shape (1, batch_size, hidden_size)
+
+            # h_t -->(1, batch_size, hidden_size)
+            hidden_seq.append(h_t.unsqueeze(0))
+            # hidden_seq is a list of sequence_length items, each of shape (1, batch_size, hidden_size)
 
         # reshape hidden_seq
         hidden_seq = torch.cat(
             hidden_seq,
-            dim = 0
+            dim=0
         )  # (sequence_length, batch_size, hidden_size)
         hidden_seq = hidden_seq.transpose(0,
-                                          1).contiguous()  #(batch_size, sequence_length, hidden_size). contiguous returns a tensor contiguous in memory
+                                          1).contiguous()  # (batch_size, sequence_length, hidden_size). contiguous returns a tensor contiguous in memory
         if return_states:
             return hidden_seq, (h_t, c_t)
         else:
-            return hidden_seq
-    
+            return hidden_seq[:, :, 1:]  # remove piezo stick

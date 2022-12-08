@@ -2,6 +2,7 @@
 .vscode/
 .style.yapf
 __pycache__/
-data/
 wandb/
 dev/
+dataset/data/*/
+!dataset/data/test/

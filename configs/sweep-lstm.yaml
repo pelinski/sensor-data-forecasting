@@ -1,0 +1,31 @@
+method: bayes
+metric:
+  goal: minimize
+  name: train_loss
+parameters:
+  model:
+    value: "lstm"
+  dataset:
+    value: "dataset/data/chaos-bells-2/processed/RX0"
+  num_sensors:
+    value: 2
+  embedding_size_src:
+    value: 2
+  embedding_size_tgt:
+    value: 1
+  batch_size:
+    values: [16, 32, 64, 128, 256, 512]
+  optimizer:
+    values: ["sgd", "adam"]
+  learning_rate:
+    distribution: "uniform"
+    min: 0
+    max: 0.1
+  epochs:
+    value: 100
+early_terminate:
+  type: hyperband
+  min_iter: 10
+program: train.py
+project: "sensor-data-forecasting-lstm"
+run_cap: 20

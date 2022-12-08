@@ -8,5 +8,9 @@ data = Data(
 
 data.saveSyncedData("dataset/data/chaos-bells-2/processed/RX0")
 
-
+## test data (sliced version of dataset)
+# f = open("dataset/data/test-data/RX0", 'w+b')
+# binary_format = bytearray(data.sensor_np[0:1000])
+# f.write(binary_format)
+# f.close()
 
