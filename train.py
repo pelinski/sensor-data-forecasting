@@ -108,8 +108,9 @@ for epoch in range(1, hyperparams["epochs"]+1):
                 wandb.log({"sensor_plot_validation": wandb.Html(get_html_plot(
                     validation_sample_plots_outputs, validation_sample_plots_targets)), "epoch": epoch}, commit=False)
 
-    wandb.log({"train_loss": train_it_losses.mean(), "validation_loss": validation_it_losses.mean(
-    ), "epoch": epoch})  # only log mean loss per epoch
-
+    losses = {"train_loss": train_it_losses.mean(
+    ).round(4), "validation_loss": validation_it_losses.mean().round(4)}
+    wandb.log({**losses, "epoch": epoch})  # only log mean loss per epoch
+    pp.pprint(losses, sort_dicts=False)
 
 run.finish()
