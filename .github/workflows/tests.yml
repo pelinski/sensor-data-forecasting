@@ -40,3 +40,6 @@ jobs:
 
       - name: Run unit tests
         run: pipenv run python test.py
+
+      - name: Run training script
+        run: pipenv run wandb disabled && pipenv run python train.py --config configs/github-test.yaml
