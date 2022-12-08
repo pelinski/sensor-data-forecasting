@@ -9,6 +9,7 @@ from DataSyncer import SyncedDataLoader
 from dataset.dataset import ForecastingTorchDataset
 from utils.plotter import get_html_plot
 from utils.loaders import load_hyperparams, load_model, load_optimizer
+from utils.saver import save_model
 
 device = torch.device(
     'cuda') if torch.cuda.is_available() else torch.device('cpu')
@@ -19,7 +20,7 @@ print("Running on device: {}".format(device))
 hyperparams = load_hyperparams()
 pp.pprint(hyperparams, sort_dicts=False)
 run = wandb.init(
-    project="sensor-data-forecasting-{}".format(hyperparams["model"]))
+    project="sensor-data-forecasting-{}".format(hyperparams["model"]), settings=wandb.Settings(start_method="fork"))
 wandb.config.update(hyperparams)
 
 # Load synced data
@@ -49,7 +50,7 @@ criterion = torch.nn.MSELoss()
 optimizer = load_optimizer(model, hyperparams)
 
 # epoch loop
-plot_period, plot_number = 1, 5
+save_and_plot_period, plot_number = 10, 5
 for epoch in range(1, hyperparams["epochs"]+1):
 
     print("█▓░ Epoch: {} ░▓█".format(epoch))
@@ -75,8 +76,10 @@ for epoch in range(1, hyperparams["epochs"]+1):
         train_loss.backward()
         optimizer.step()
 
-        # bokeh plot of some batches every 10 epochs
-        if epoch % plot_period == 0 and epoch != 0 and batch_idx <= plot_number:
+        # bokeh plot of some batches every 10 epochs, save model
+        if epoch % save_and_plot_period == 0 and batch_idx <= plot_number:
+            save_model(model, optimizer, hyperparams, epoch)
+
             train_sample_plots_outputs.append(out)
             train_sample_plots_targets.append(targets)
             if batch_idx == plot_number:
@@ -101,7 +104,7 @@ for epoch in range(1, hyperparams["epochs"]+1):
             validation_it_losses, validation_loss.item())
 
        # bokeh plot of some batches every 10 epochs
-        if epoch % plot_period == 0 and epoch != 0 and batch_idx <= plot_number:
+        if epoch % save_and_plot_period == 0 and epoch != 0 and batch_idx <= plot_number:
             validation_sample_plots_outputs.append(out)
             validation_sample_plots_targets.append(targets)
             if batch_idx == plot_number:

@@ -1,5 +1,5 @@
 model: "transformer"
-dataset: "dataset/data/chaos-bells-2/processed/RX0"
+dataset: "dataset/data/test/RX0"
 num_sensors: 2
 epochs: 1
 batch_size: 16
