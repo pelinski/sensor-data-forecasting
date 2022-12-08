@@ -68,7 +68,7 @@ for epoch in range(1, hyperparams["epochs"]+1):
             :, :, 1:]  # remove piezo stick
 
         out = model(data)
-        train_loss = criterion(out, targets)
+        train_loss = torch.sqrt(criterion(out, targets))
         train_it_losses = np.append(train_it_losses, train_loss.item())
 
         # update
@@ -112,7 +112,7 @@ for epoch in range(1, hyperparams["epochs"]+1):
                     validation_sample_plots_outputs, validation_sample_plots_targets)), "epoch": epoch}, commit=False)
 
     losses = {"train_loss": train_it_losses.mean(
-    ).round(10), "validation_loss": validation_it_losses.mean().round(10)}
+    ).round(8), "validation_loss": validation_it_losses.mean().round(8)}
     wandb.log({**losses, "epoch": epoch})  # only log mean loss per epoch
     pp.pprint(losses, sort_dicts=False)
 

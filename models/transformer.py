@@ -36,9 +36,6 @@ class TransformerEncoder(torch.nn.Module):
             self.d_model, self.num_heads, self.dim_feedforward, self.dropout, self.num_encoder_layers)
         self.OutputLayer = OutputLayer(self.embedding_size_tgt, self.d_model)
 
-        self.InputLayerEncoder.init_weights()
-        self.OutputLayer.init_weights()
-
     def forward(self, src):
         """Transformer Encoder forward pass
 
@@ -85,13 +82,13 @@ class InputLayer(torch.nn.Module):
 
         self.max_len = max_len
 
-        # bias became nan after 1 epoch
-        self.Linear = torch.nn.Linear(embedding_size, d_model, bias=False)
+        self.Linear = torch.nn.Linear(embedding_size, d_model, bias=True)
         self.ReLU = torch.nn.ReLU()
         self.PositionalEncoding = PositionalEncoding(d_model, max_len, dropout)
 
-    def init_weights(self, initrange=0.1):
-        self.Linear.weight.data.uniform_(-initrange, initrange)
+        with torch.no_grad():
+            self.Linear.weight.data.normal_(mean=0.0, std=1.0)
+            self.Linear.bias.data.zero_()
 
     def forward(self, src):
         """Input layer forward pass
@@ -156,11 +153,11 @@ class OutputLayer(torch.nn.Module):
         super(OutputLayer, self).__init__()
 
         self.embedding_size = embedding_size
-        # bias became nan after 1 epoch
-        self.Linear = torch.nn.Linear(d_model, embedding_size, bias=False)
+        self.Linear = torch.nn.Linear(d_model, embedding_size, bias=True)
 
-    def init_weights(self, initrange=0.1):
-        self.Linear.weight.data.uniform_(-initrange, initrange)
+        with torch.no_grad():
+            self.Linear.weight.data.normal_(mean=0.0, std=1.0)
+            self.Linear.bias.data.zero_()
 
     def forward(self, encoder_out):
         """Output Layer forward pass
