@@ -1,12 +1,20 @@
+project: "sensor-data-forecasting-transformer"
+program: train.py
 method: bayes
 metric:
   goal: minimize
-  name: train_loss
+  name: validation_loss
+run_cap: 20
+early_terminate:
+  type: hyperband
+  min_iter: 10
 parameters:
   model:
     value: "transformer"
   dataset:
     value: "dataset/data/chaos-bells-2/processed/RX0"
+  seq_len:
+    value: 512
   num_sensors:
     value: 2
   embedding_size_src:
@@ -37,9 +45,3 @@ parameters:
     max: 12
   epochs:
     value: 100
-early_terminate:
-  type: hyperband
-  min_iter: 10
-program: train.py
-project: "sensor-data-forecasting-transformer"
-run_cap: 20

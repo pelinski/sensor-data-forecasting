@@ -1,11 +1,11 @@
 model: "transformer"
 dataset: "dataset/data/test/RX0"
 num_sensors: 2
-epochs: 1
+epochs: 50
 batch_size: 16
-seq_len: 12
+seq_len: 100
 learning_rate: 0.021
-optimizer: 'sgd'
+optimizer: "sgd"
 d_model: 128
 embedding_size_src: 2
 embedding_size_tgt: 1

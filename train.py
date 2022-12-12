@@ -98,7 +98,7 @@ for epoch in range(1, hyperparams["epochs"]+1):
         targets = targets.to(device=device, non_blocking=True)[
             :, :, 1:]  # remove piezo stick
 
-        out = model(data)
+        out = model.predict(data) # using predict method to avoid backprop
         validation_loss = criterion(out, targets)
         validation_it_losses = np.append(
             validation_it_losses, validation_loss.item())

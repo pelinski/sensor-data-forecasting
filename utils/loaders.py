@@ -62,7 +62,7 @@ def load_hyperparams():
                    "dataset":  hp["dataset"] if "dataset" in hp else args.dataset,
                    "epochs": hp["epochs"] if "epochs" in hp else args.epochs,
                    "batch_size": hp["batch_size"] if "batch_size" in hp else args.batch_size,
-                   "seq_len": hp["seq_len"] if "maximum sequence length" in hp else args.seq_len,
+                   "seq_len": hp["seq_len"] if "seq_len" in hp else args.seq_len,
                    "learning_rate": hp["learning_rate"] if "learning_rate" in hp else args.learning_rate,
                    "optimizer": hp["optimizer"] if "optimizer" in hp else args.optimizer,
                    "device": torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')}
