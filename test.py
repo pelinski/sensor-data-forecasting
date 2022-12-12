@@ -23,7 +23,7 @@ class testLSTM(unittest.TestCase):
         lstm = CustomLSTM(input_size, hidden_size).to(
             device=device, non_blocking=True)
 
-        hidden_seq, (h_t, c_t) = lstm(x, return_states=True)
+        hidden_seq, (h_t, c_t) = lstm.predict(x, return_states=True)
 
         self.assertEqual(hidden_seq.shape, (batch_size, seq_length, hidden_size),
                          "output shape should be (batch_size, seq_length, hidden_size")
@@ -73,7 +73,7 @@ class test_transformer(unittest.TestCase):
         model = TransformerEncoder(
             **transformer_params).to(device=device, non_blocking=True)
 
-        y = model(x)
+        y = model.predict(x)
 
         self.assertEqual(y.shape, (transformer_params["batch_size"], transformer_params["seq_len"], transformer_params["embedding_size_tgt"]),
                          "output shape should be (batch_size, seq_len, embedding_size_tgt)")

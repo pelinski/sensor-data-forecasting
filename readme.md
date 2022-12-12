@@ -19,5 +19,5 @@ pipenv run python train.py
 ```
 The training and model parameters can be modified by passing `.yaml` files to the wandb config:
 ```
-pipenv run python train.py --config configs/test.yaml
+pipenv run python train.py --config configs/test-trans.yaml
 ```

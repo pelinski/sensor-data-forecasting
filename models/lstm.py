@@ -87,3 +87,14 @@ class CustomLSTM(nn.Module):  # short version using matrices
             return hidden_seq, (h_t, c_t)
         else:
             return hidden_seq[:, :, 1:]  # remove piezo stick
+
+    def predict(self, x, init_states=None, return_states=False):
+        """LSTM predict method
+
+        Args:
+            x (torch.Tensor): Input torch tensor of shape (batch_size, seq_len, embedding_size_src)
+        """
+        self.eval()
+        with torch.no_grad():
+            y = self.forward(x, init_states, return_states)
+        return y
