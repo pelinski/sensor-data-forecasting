@@ -12,7 +12,7 @@ parameters:
   model:
     value: "lstm"
   dataset:
-    value: "dataset/data/chaos-bells-2"
+    value: "dataset/data/chaos-bells-2/processed/RX0"
   seq_len:
     value: 512
   num_sensors:
