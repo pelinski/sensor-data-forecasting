@@ -21,8 +21,3 @@ The training and model parameters can be modified by passing `.yaml` files to th
 ```
 pipenv run python train.py --config configs/test.yaml
 ```
-
------
-To do:
-- Implement transformer
-- Implement hit masking strategies
