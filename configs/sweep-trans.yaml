@@ -1,6 +1,6 @@
 project: "sensor-data-forecasting-transformer"
 program: train.py
-method: bayes
+method: random
 metric:
   goal: minimize
   name: validation_loss
@@ -14,7 +14,7 @@ parameters:
   dataset:
     value: "dataset/data/chaos-bells-2/processed/RX0"
   seq_len:
-    value: 512
+    values: [16, 32, 64, 128]
   num_sensors:
     value: 2
   embedding_size_src:
@@ -22,11 +22,11 @@ parameters:
   embedding_size_tgt:
     value: 1
   batch_size:
-    values: [16, 32, 64, 128, 256, 512]
+    values: [16, 32, 64, 128, 256]
   d_model:
-    values: [16, 32, 64, 128, 256, 512]
+    values: [16, 32, 64, 128, 256]
   dim_feedforward:
-    values: [16, 32, 64, 128, 256, 512]
+    values: [16, 32, 64, 128, 256]
   dropout:
     distribution: "uniform"
     min: 0.1
