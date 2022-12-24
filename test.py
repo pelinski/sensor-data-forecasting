@@ -8,46 +8,42 @@ from models.transformer import TransformerEncoder
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+lstm_params = {
+    "batch_size": 32,
+    "seq_len": 10,
+    "input_size": 20,
+    "hidden_size": 12,
+    "out_size": 30,
+    "d_model": 128,
+    "dropout": 0.2,
+}
+
 
 class testLSTM(unittest.TestCase):
 
     def test_shapes(self):
 
-        batch_size = 32
-        seq_len = 8
-        input_size = 20
-        hidden_size = 12
+        batch_size = lstm_params["batch_size"]
+        seq_len = lstm_params["seq_len"]
+        input_size = lstm_params["input_size"]
+        hidden_size = lstm_params["hidden_size"]
+        out_size = lstm_params["out_size"]
 
         x = torch.rand(batch_size, seq_len, input_size).to(
             device=device, non_blocking=True)
-        lstm = CustomLSTM(input_size, hidden_size).to(
+        lstm = CustomLSTM(**lstm_params).to(
             device=device, non_blocking=True)
 
         hidden_seq, (h_t, c_t) = lstm.predict(x, return_states=True)
 
-        self.assertEqual(hidden_seq.shape, (batch_size, seq_len, hidden_size),
-                         "output shape should be (batch_size, seq_len, hidden_size")
+        self.assertEqual(hidden_seq.shape, (batch_size, out_size, hidden_size),
+                         "output shape should be (batch_size, out_size, hidden_size")
 
         self.assertEqual(h_t.shape, (batch_size, hidden_size),
                          "hidden state shape should be (batch_size, hidden_size)")
 
         self.assertEqual(c_t.shape, (batch_size, hidden_size),
                          "cell state shape should be (batch_size, hidden_size)")
-
-    def test_parameters(self):
-
-        input_size = 10
-        hidden_size = 32
-
-        lstm = CustomLSTM(input_size, hidden_size).to(
-            device=device, non_blocking=True)
-
-        total_params = sum(p.numel() for p in lstm.parameters())
-        num_params = 4 * (input_size * hidden_size +
-                          hidden_size * hidden_size + hidden_size)
-
-        self.assertEqual(total_params, num_params,
-                         "total number of parameters should be 4 * (input_size * hidden_size + hidden_size * hidden_size + hidden_size)")
 
 
 transformer_params = {
@@ -81,7 +77,7 @@ class test_transformer(unittest.TestCase):
 
 class test_dataset(unittest.TestCase):
 
-    def test_inputs_and_targets(self):
+    def test_shapes(self):
         num_sensors = 8
         seq_len = 16
         n_target_windows = 3

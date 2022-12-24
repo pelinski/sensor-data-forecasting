@@ -26,7 +26,8 @@ wandb.config.update(hyperparams)
 # Load synced data
 sensor_data = SyncedDataLoader(
     path=hyperparams["dataset"], id="RX1", num_sensors=hyperparams["num_sensors"])
-dataset = ForecastingTorchDataset(sensor_data, hyperparams["seq_len"])
+dataset = ForecastingTorchDataset(
+    sensor_data, hyperparams["seq_len"], hyperparams["n_tgt_win"])
 
 # Split dataset
 train_count = int(0.7 * dataset.__len__())

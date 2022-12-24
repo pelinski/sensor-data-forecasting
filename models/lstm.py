@@ -1,26 +1,43 @@
-# https://towardsdatascience.com/building-a-lstm-by-hand-on-pytorch-59c02a4ec091
 import math
 import torch
 import torch.nn as nn
 
 
 class CustomLSTM(nn.Module):  # short version using matrices
-    def __init__(self, input_size, hidden_size):
-        """LSTM 
+    # https://towardsdatascience.com/building-a-lstm-by-hand-on-pytorch-59c02a4ec091
+    def __init__(self, **kwargs):
+        """LSTM
 
         Source: https://towardsdatascience.com/building-a-lstm-by-hand-on-pytorch-59c02a4ec091
 
         Args:
-            input_size (int): Input size of the network 
+            seq_len (int): Sequence length
+            out_size (int): Output sequence length
+            d_model (int): Feedforward dimensionality expansion
+            dropout (float): Dropout rate
+            input_size (int): Input size of the network
             hidden_size (int): Size of the hidden state
         """
         super().__init__()
-        self.input_size = input_size
-        self.hidden_size = hidden_size
+        self.seq_len = kwargs.get("seq_len", 10)
+        self.out_size = kwargs.get("out_size", 30)
+        self.input_size = kwargs.get("input_size", 8)
+        self.hidden_size = kwargs.get("hidden_size", 4)
+        self.d_model = kwargs.get("d_model", 128)
+        self.dropout_p = kwargs.get("dropout", 0.2)
+
         # matrices containing weights for input, hidden and bias for each of the 4 gates
-        self.W = nn.Parameter(torch.Tensor(input_size, hidden_size*4))
-        self.U = nn.Parameter(torch.Tensor(hidden_size, hidden_size*4))
-        self.bias = nn.Parameter(torch.Tensor(hidden_size*4))
+        self.W = nn.Parameter(torch.Tensor(
+            self.input_size, self.hidden_size*4))
+        self.U = nn.Parameter(torch.Tensor(
+            self.hidden_size, self.hidden_size*4))
+
+        self.bias = nn.Parameter(torch.Tensor(self.hidden_size*4))
+        self.relu = nn.ReLU()
+        self.out_linear = nn.Sequential(nn.Linear(self.seq_len, self.d_model), nn.ReLU(),
+                                        nn.Linear(self.d_model, self.out_size))
+        self.dropout = nn.Dropout(self.dropout_p)
+
         self.init_weights()
 
     def init_weights(self):
@@ -77,16 +94,24 @@ class CustomLSTM(nn.Module):  # short version using matrices
             # hidden_seq is a list of sequence_length items, each of shape (1, batch_size, hidden_size)
 
         # reshape hidden_seq
-        hidden_seq = torch.cat(
-            hidden_seq,
-            dim=0
-        )  # (sequence_length, batch_size, hidden_size)
+        # (sequence_length, batch_size, hidden_size)
+        hidden_seq = torch.cat(hidden_seq, dim=0)
         hidden_seq = hidden_seq.transpose(0,
                                           1).contiguous()  # (batch_size, sequence_length, hidden_size). contiguous returns a tensor contiguous in memory
+
+        # (sequence_length, batch_size, hidden_size)
+        out = self.relu(hidden_seq)
+
+        # project into out_size
+        out = out.permute(0, 2, 1)  # (batch_size, hidden_size, seq_len)
+        out = self.out_linear(out)  # (batch_size, hidden_size, out_size)
+        out = out.permute(0, 2, 1)  # (batch_size, out_size, hidden_size)
+        out = self.dropout(out)
+
         if return_states:
-            return hidden_seq, (h_t, c_t)
+            return out, (h_t, c_t)
         else:
-            return hidden_seq[:, :, 1:]  # remove piezo stick
+            return out[:, :, 1:]  # remove piezo stick
 
     def predict(self, x, init_states=None, return_states=False):
         """LSTM predict method
