@@ -84,7 +84,7 @@ for epoch in range(1, hyperparams["epochs"]+1):
         optimizer.step()
 
         # bokeh plot of some batches every hyperparams["save_and_plot_period"] epochs, save model
-    if epoch % hyperparams["save_and_plot_period"] == 0:
+    if hyperparams["save_and_plot_period"] and epoch % hyperparams["save_and_plot_period"] == 0:
         save_model(model, optimizer, hyperparams, epoch)
         # remove piezo stick
         inputs = torch.Tensor(
@@ -111,7 +111,7 @@ for epoch in range(1, hyperparams["epochs"]+1):
             validation_it_losses, validation_loss.item())
 
         # bokeh plot of some batches every hyperparams["save_and_plot_period"] epochs
-    if epoch % hyperparams["save_and_plot_period"] == 0:
+    if hyperparams["save_and_plot_period"] and epoch % hyperparams["save_and_plot_period"] == 0:
         # remove piezo stick
         inputs = torch.Tensor(
             validation_dataset.dataset.inputs[validation_windows_with_hits]).to(device=device)

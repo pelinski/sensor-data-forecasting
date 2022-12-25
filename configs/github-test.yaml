@@ -13,5 +13,5 @@ num_heads: 8
 dim_feedforward: 256
 dropout: 0.115
 num_encoder_layers: 1
-save_and_plot_period: 1
-plot_number: 1
+save_and_plot_period: 0
+plot_number: 0
