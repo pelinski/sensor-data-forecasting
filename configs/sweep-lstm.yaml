@@ -31,3 +31,7 @@ parameters:
     values: [16, 32, 64, 128, 256, 512]
   epochs:
     value: 100
+  save_and_plot_period:
+    value: 5
+  plot_number:
+    value: 10

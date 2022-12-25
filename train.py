@@ -51,13 +51,13 @@ model = load_model(hyperparams)
 criterion = torch.nn.MSELoss()
 optimizer = load_optimizer(model, hyperparams)
 
-save_and_plot_period, plot_number = 1, 10
+# get windows with hits
 train_windows_with_hits = random.choices(list(set([e[0] for e in np.argwhere(
-    train_dataset.dataset.inputs[:, :, 1] > 0.6)])), k=plot_number)  # sensor idx 1 --> accelerometer
+    train_dataset.dataset.inputs[:, :, 1] > 0.6)])), k=hyperparams["plot_number"])  # sensor idx 1 --> accelerometer
 validation_windows_with_hits = random.choices(list(set([e[0] for e in np.argwhere(
-    validation_dataset.dataset.inputs[:, :, 1] > 0.6)])), k=plot_number)  # sensor idx 1 --> accelerometer
+    validation_dataset.dataset.inputs[:, :, 1] > 0.6)])), k=hyperparams["plot_number"])  # sensor idx 1 --> accelerometer
 test_windows_with_hits = random.choices(list(set([e[0] for e in np.argwhere(
-    test_dataset.dataset.inputs[:, :, 1] > 0.6)])), k=plot_number)  # sensor idx 1 --> accelerometer
+    test_dataset.dataset.inputs[:, :, 1] > 0.6)])), k=hyperparams["plot_number"])  # sensor idx 1 --> accelerometer
 
 # epoch loop
 for epoch in range(1, hyperparams["epochs"]+1):
@@ -83,8 +83,8 @@ for epoch in range(1, hyperparams["epochs"]+1):
         train_loss.backward()
         optimizer.step()
 
-        # bokeh plot of some batches every save_and_plot_period epochs, save model
-    if epoch % save_and_plot_period == 0:
+        # bokeh plot of some batches every hyperparams["save_and_plot_period"] epochs, save model
+    if epoch % hyperparams["save_and_plot_period"] == 0:
         save_model(model, optimizer, hyperparams, epoch)
         # remove piezo stick
         inputs = torch.Tensor(
@@ -110,8 +110,8 @@ for epoch in range(1, hyperparams["epochs"]+1):
         validation_it_losses = np.append(
             validation_it_losses, validation_loss.item())
 
-        # bokeh plot of some batches every save_and_plot_period epochs
-    if epoch % save_and_plot_period == 0:
+        # bokeh plot of some batches every hyperparams["save_and_plot_period"] epochs
+    if epoch % hyperparams["save_and_plot_period"] == 0:
         # remove piezo stick
         inputs = torch.Tensor(
             validation_dataset.dataset.inputs[validation_windows_with_hits]).to(device=device)

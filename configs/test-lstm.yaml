@@ -9,3 +9,5 @@ n_tgt_win: 3
 batch_size: 32
 d_model: 128
 dropout: 0.2
+save_and_plot_period: 1
+plot_number: 10

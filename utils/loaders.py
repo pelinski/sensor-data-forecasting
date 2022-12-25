@@ -51,6 +51,12 @@ def load_hyperparams():
     parser.add_argument(
         "--embedding_size_tgt",
         help="output embedding size", default=8, type=int,)
+    parser.add_argument(
+        "--save_and_plot_period",
+        help="save model and plot sample period in epochs", default=1, type=int,)
+    parser.add_argument(
+        "--plot_number",
+        help="number of samples to plot", default=1, type=int,)
 
     args = parser.parse_args()
 
@@ -71,6 +77,8 @@ def load_hyperparams():
                    "dropout": hp["dropout"] if "dropout" in hp else args.dropout,
                    "learning_rate": hp["learning_rate"] if "learning_rate" in hp else args.learning_rate,
                    "optimizer": hp["optimizer"] if "optimizer" in hp else args.optimizer,
+                   "save_and_plot_period": hp["save_and_plot_period"] if "save_and_plot_period" in hp else args.save_and_plot_period,
+                   "plot_number": hp["plot_number"] if "plot_number" in hp else args.plot_number,
                    "device": torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')}
     if hyperparams["model"] == "transformer":
         hyperparams.update(
