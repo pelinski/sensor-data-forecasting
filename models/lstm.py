@@ -59,7 +59,7 @@ class CustomLSTM(nn.Module):  # short version using matrices
             if return_states is False:
                 hidden_state (torch.Tensor): Hidden state
         """
-        batch_size, seq_size, _ = x.size()
+        (batch_size, seq_size, _) = x.shape
         hidden_seq = []
 
         if init_states is None:
