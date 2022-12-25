@@ -1,16 +1,19 @@
 from DataSyncer import Data
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-d","--dataset", help="dataset path", type=str)
+parser.add_argument("-s","--save_path", help="save path",type=str)
+parser.add_argument("-i","--id", help="Bela ID",type=int)
+parser.add_argument("-n","--num_sensors", help="number of sensors",type=int)
+args = parser.parse_args()
 
 data = Data(
-    id="RX0",
-    sensor_log_path="dataset/data/chaos-bells-2/raw/RX0-data.log",
-    num_sensors=2,
+    id=args.id,
+    sensor_log_path=args.dataset,
+    num_sensors=args.num_sensors,
 )
 
-data.saveSyncedData("dataset/data/chaos-bells-2/processed/RX0")
+data.saveSyncedData(args.save_path)
 
-## test data (sliced version of dataset)
-# f = open("dataset/data/test-data/RX0", 'w+b')
-# binary_format = bytearray(data.sensor_np[0:1000])
-# f.write(binary_format)
-# f.close()
 

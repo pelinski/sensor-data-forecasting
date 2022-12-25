@@ -1,5 +1,6 @@
 import torch
 import wandb
+import random
 import pprint as pp
 from tqdm import tqdm
 import numpy as np
@@ -26,7 +27,8 @@ wandb.config.update(hyperparams)
 # Load synced data
 sensor_data = SyncedDataLoader(
     path=hyperparams["dataset"], id="RX1", num_sensors=hyperparams["num_sensors"])
-dataset = ForecastingTorchDataset(sensor_data, hyperparams["seq_len"])
+dataset = ForecastingTorchDataset(
+    sensor_data, hyperparams["seq_len"], hyperparams["n_tgt_win"])
 
 # Split dataset
 train_count = int(0.7 * dataset.__len__())
@@ -38,27 +40,32 @@ train_dataset, validation_dataset, test_dataset = torch.utils.data.random_split(
 
 # Dataloaders
 train_loader = DataLoader(
-    train_dataset, batch_size=hyperparams["batch_size"], shuffle=False, pin_memory=True)
+    train_dataset, batch_size=hyperparams["batch_size"], shuffle=True, pin_memory=True)
 validation_loader = DataLoader(
-    validation_dataset, batch_size=hyperparams["batch_size"], shuffle=False, pin_memory=True)
+    validation_dataset, batch_size=hyperparams["batch_size"], shuffle=True, pin_memory=True)
 test_loader = DataLoader(
-    test_dataset, batch_size=hyperparams["batch_size"], shuffle=False, pin_memory=True)
+    test_dataset, batch_size=hyperparams["batch_size"], shuffle=True, pin_memory=True)
 
 # Model, criterion and optimizer
 model = load_model(hyperparams)
 criterion = torch.nn.MSELoss()
 optimizer = load_optimizer(model, hyperparams)
 
+# get windows with hits
+train_windows_with_hits = random.choices(list(set([e[0] for e in np.argwhere(
+    train_dataset.dataset.inputs[:, :, 1] > 0.6)])), k=hyperparams["plot_number"])  # sensor idx 1 --> accelerometer
+validation_windows_with_hits = random.choices(list(set([e[0] for e in np.argwhere(
+    validation_dataset.dataset.inputs[:, :, 1] > 0.6)])), k=hyperparams["plot_number"])  # sensor idx 1 --> accelerometer
+test_windows_with_hits = random.choices(list(set([e[0] for e in np.argwhere(
+    test_dataset.dataset.inputs[:, :, 1] > 0.6)])), k=hyperparams["plot_number"])  # sensor idx 1 --> accelerometer
+
 # epoch loop
-save_and_plot_period, plot_number = 10, 5
 for epoch in range(1, hyperparams["epochs"]+1):
 
     print("█▓░ Epoch: {} ░▓█".format(epoch))
 
     # training loop
     train_it_losses = np.array([])
-    train_sample_plots_outputs = []
-    train_sample_plots_targets = []
 
     for batch_idx, (data, targets) in enumerate(tqdm(train_loader)):
         # (batch_size, seq_length, input_size)
@@ -76,20 +83,20 @@ for epoch in range(1, hyperparams["epochs"]+1):
         train_loss.backward()
         optimizer.step()
 
-        # bokeh plot of some batches every 10 epochs, save model
-        if epoch % save_and_plot_period == 0 and batch_idx <= plot_number:
-            save_model(model, optimizer, hyperparams, epoch)
-
-            train_sample_plots_outputs.append(out)
-            train_sample_plots_targets.append(targets)
-            if batch_idx == plot_number:
-                wandb.log({"sensor_plot_train": wandb.Html(get_html_plot(
-                    train_sample_plots_outputs, train_sample_plots_targets)), "epoch": epoch}, commit=False)
+        # bokeh plot of some batches every hyperparams["save_and_plot_period"] epochs, save model
+    if hyperparams["save_and_plot_period"] and epoch % hyperparams["save_and_plot_period"] == 0:
+        save_model(model, optimizer, hyperparams, epoch)
+        # remove piezo stick
+        inputs = torch.Tensor(
+            train_dataset.dataset.inputs[train_windows_with_hits]).to(device=device)
+        targets = torch.Tensor(
+            train_dataset.dataset.targets[train_windows_with_hits]).to(device=device)
+        outputs = model.predict(inputs)
+        wandb.log({"sensor_plot_train": wandb.Html(get_html_plot(
+            inputs[:, :, 1:], outputs, targets[:, :, 1:])), "epoch": epoch}, commit=False)
 
     # validation loop
     validation_it_losses = np.array([])
-    validation_sample_plots_outputs = []
-    validation_sample_plots_targets = []
 
     for batch_idx, (data, targets) in enumerate(tqdm(validation_loader)):
         # (batch_size, seq_length, input_size)
@@ -98,18 +105,21 @@ for epoch in range(1, hyperparams["epochs"]+1):
         targets = targets.to(device=device, non_blocking=True)[
             :, :, 1:]  # remove piezo stick
 
-        out = model(data)
+        out = model.predict(data)  # using predict method to avoid backprop
         validation_loss = criterion(out, targets)
         validation_it_losses = np.append(
             validation_it_losses, validation_loss.item())
 
-       # bokeh plot of some batches every 10 epochs
-        if epoch % save_and_plot_period == 0 and epoch != 0 and batch_idx <= plot_number:
-            validation_sample_plots_outputs.append(out)
-            validation_sample_plots_targets.append(targets)
-            if batch_idx == plot_number:
-                wandb.log({"sensor_plot_validation": wandb.Html(get_html_plot(
-                    validation_sample_plots_outputs, validation_sample_plots_targets)), "epoch": epoch}, commit=False)
+        # bokeh plot of some batches every hyperparams["save_and_plot_period"] epochs
+    if hyperparams["save_and_plot_period"] and epoch % hyperparams["save_and_plot_period"] == 0:
+        # remove piezo stick
+        inputs = torch.Tensor(
+            validation_dataset.dataset.inputs[validation_windows_with_hits]).to(device=device)
+        targets = torch.Tensor(
+            validation_dataset.dataset.targets[validation_windows_with_hits]).to(device=device)
+        outputs = model.predict(inputs)
+        wandb.log({"sensor_plot_validation": wandb.Html(get_html_plot(
+            inputs[:, :, 1:], outputs, targets[:, :, 1:])), "epoch": epoch}, commit=False)
 
     losses = {"train_loss": train_it_losses.mean(
     ).round(8), "validation_loss": validation_it_losses.mean().round(8)}
