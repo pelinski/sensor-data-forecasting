@@ -13,7 +13,6 @@ class CustomLSTM(nn.Module):  # short version using matrices
         Args:
             seq_len (int): Sequence length
             out_size (int): Output sequence length
-            d_model (int): Feedforward dimensionality expansion
             dropout (float): Dropout rate
             input_size (int): Input size of the network
             hidden_size (int): Size of the hidden state
@@ -23,7 +22,6 @@ class CustomLSTM(nn.Module):  # short version using matrices
         self.out_size = kwargs.get("out_size", 30)
         self.input_size = kwargs.get("input_size", 8)
         self.hidden_size = kwargs.get("hidden_size", 4)
-        self.d_model = kwargs.get("d_model", 128)
         self.dropout_p = kwargs.get("dropout", 0.2)
 
         # matrices containing weights for input, hidden and bias for each of the 4 gates
@@ -34,8 +32,7 @@ class CustomLSTM(nn.Module):  # short version using matrices
 
         self.bias = nn.Parameter(torch.Tensor(self.hidden_size*4))
         self.relu = nn.ReLU()
-        self.out_linear = nn.Sequential(nn.Linear(self.seq_len, self.d_model), nn.ReLU(),
-                                        nn.Linear(self.d_model, self.out_size))
+        self.linear_out = nn.Linear(self.seq_len, self.out_size)
         self.dropout = nn.Dropout(self.dropout_p)
 
         self.init_weights()
@@ -44,6 +41,9 @@ class CustomLSTM(nn.Module):  # short version using matrices
         stdv = 1.0 / math.sqrt(self.hidden_size)
         for weight in self.parameters():
             weight.data.uniform_(-stdv, stdv)
+
+        self.linear_out.bias.data.zero_()
+        self.linear_out.weight.data.uniform_(-stdv, stdv)
 
     def forward(self, x, init_states=None, return_states=False):
         """LSTM forward pass
@@ -100,13 +100,14 @@ class CustomLSTM(nn.Module):  # short version using matrices
                                           1).contiguous()  # (batch_size, sequence_length, hidden_size). contiguous returns a tensor contiguous in memory
 
         # (sequence_length, batch_size, hidden_size)
-        out = self.relu(hidden_seq)
+        out = self.dropout(hidden_seq)
 
-        # project into out_size
+        # # project into out_size
         out = out.permute(0, 2, 1)  # (batch_size, hidden_size, seq_len)
-        out = self.out_linear(out)  # (batch_size, hidden_size, out_size)
+        out = self.linear_out(out)  # (batch_size, hidden_size, out_size)
+        # out = self.relu(out)
         out = out.permute(0, 2, 1)  # (batch_size, out_size, hidden_size)
-        out = self.dropout(out)
+        # out = self.dropout(out)
 
         if return_states:
             return out, (h_t, c_t)

@@ -69,7 +69,6 @@ def load_hyperparams():
     hyperparams = {"model": hp["model"] if "model" in hp else args.model,
                    "num_sensors": hp["num_sensors"] if "num_sensors" in hp else args.num_sensors,
                    "dataset":  hp["dataset"] if "dataset" in hp else args.dataset,
-                   "d_model": hp["d_model"] if "d_model" in hp else args.d_model,
                    "n_tgt_win": hp["n_tgt_win"] if "n_tgt_win" in hp else args.n_tgt_win,
                    "epochs": hp["epochs"] if "epochs" in hp else args.epochs,
                    "batch_size": hp["batch_size"] if "batch_size" in hp else args.batch_size,
@@ -87,6 +86,7 @@ def load_hyperparams():
              "num_heads": hp["num_heads"] if "num_heads" in hp else args.n_heads,
              "dim_feedforward": hp["dim_feedforward"] if "dim_feedforward" in hp else args.dim_feedforward,
              "num_encoder_layers": hp["num_encoder_layers"] if "num_encoder_layers" in hp else args.num_encoder_layers,
+             "d_model": hp["d_model"] if "d_model" in hp else args.d_model,
              }
         )
 

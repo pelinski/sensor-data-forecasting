@@ -2,9 +2,7 @@ RX0:
   num_sensors: 2
   recorded_on_multiple_belas: False
   notes: "CH1 is a piezo stick and CH2 is an accelerometer inside a pendulum"
-  n_tgt_win: 1
 RX1:
-  num_densors: 8
+  num_sensors: 8
   recorded_on_multiple_belas: False
   notes:"CH1 is a piezo stick and rest of the channels are accelerometers"
-  n_tgt_win: 1

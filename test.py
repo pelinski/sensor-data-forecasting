@@ -14,7 +14,6 @@ lstm_params = {
     "input_size": 20,
     "hidden_size": 12,
     "out_size": 30,
-    "d_model": 128,
     "dropout": 0.2,
 }
 
