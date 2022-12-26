@@ -1,0 +1,35 @@
+project: "sensor-data-forecasting-lstm"
+program: train.py
+method: bayes
+metric:
+  goal: minimize
+  name: validation_loss
+run_cap: 15
+early_terminate:
+  type: hyperband
+  min_iter: 10
+parameters:
+  model:
+    value: "lstm"
+  dataset:
+    value: "dataset/data/chaos-bells-3/processed/RX0"
+  seq_len:
+    value: 512
+  n_tgt_win:
+    value: 1
+  num_sensors:
+    value: 2
+  batch_size:
+    values: [16, 32, 64, 128, 256, 512]
+  optimizer:
+    values: ["sgd", "adam"]
+  learning_rate:
+    distribution: "uniform"
+    min: 0
+    max: 0.1
+  epochs:
+    value: 100
+  save_and_plot_period:
+    value: 5
+  plot_number:
+    value: 10

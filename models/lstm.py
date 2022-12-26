@@ -104,7 +104,8 @@ class CustomLSTM(nn.Module):  # short version using matrices
 
         # # project into out_size
         out = out.permute(0, 2, 1)  # (batch_size, hidden_size, seq_len)
-        out = self.linear_out(out)  # (batch_size, hidden_size, out_size)
+        if self.out_size != self.seq_len:  # if more than 1 tgt window, project sequence into out_size
+            out = self.linear_out(out)  # (batch_size, hidden_size, out_size)
         # out = self.relu(out)
         out = out.permute(0, 2, 1)  # (batch_size, out_size, hidden_size)
         # out = self.dropout(out)
