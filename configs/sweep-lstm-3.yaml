@@ -33,3 +33,7 @@ parameters:
     value: 5
   plot_number:
     value: 10
+  dropout:
+    distribution: "uniform"
+    min: 0.1
+    max: 0.3

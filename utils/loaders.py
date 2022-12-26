@@ -57,6 +57,12 @@ def load_hyperparams():
     parser.add_argument(
         "--plot_number",
         help="number of samples to plot", default=1, type=int,)
+    parser.add_argument(
+        "--load_model_epoch",
+        help="load model at epoch", default=None, type=int,)
+    parser.add_argument(
+        "--load_model_path",
+        help="wandb path to load model from", default=None, type=str,)
 
     args = parser.parse_args()
 
@@ -78,6 +84,8 @@ def load_hyperparams():
                    "optimizer": hp["optimizer"] if "optimizer" in hp else args.optimizer,
                    "save_and_plot_period": hp["save_and_plot_period"] if "save_and_plot_period" in hp else args.save_and_plot_period,
                    "plot_number": hp["plot_number"] if "plot_number" in hp else args.plot_number,
+                   "load_model_epoch": hp["load_model_epoch"] if "load_model_epoch" in hp else args.load_model_epoch,
+                   "load_model_path": hp["load_model_path"] if "load_model_path" in hp else args.load_model_path,
                    "device": torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')}
     if hyperparams["model"] == "transformer":
         hyperparams.update(
@@ -101,6 +109,7 @@ def load_model(hyperparams):
 
     Returns:
         model (torch.nn.Module): Model based on hyperparameters
+        epoch (int): Epoch number
     """
 
     device = torch.device(
@@ -115,7 +124,17 @@ def load_model(hyperparams):
     else:
         model = None
 
-    return model
+    if hyperparams["load_model_epoch"] and hyperparams["load_model_path"]:
+        model_file = wandb.restore("run_{}_epoch_{}.model".format(hyperparams["load_model_path"].split(
+            "/")[-1], hyperparams["load_model_epoch"]), run_path=hyperparams["load_model_path"])
+        checkpoint = torch.load(
+            model_file.name, map_location=torch.device(device))
+        model.load_state_dict(checkpoint["model_state_dict"])
+        epoch = checkpoint['epoch']
+    else:
+        epoch = 0
+
+    return model, epoch+1
 
 
 def load_optimizer(model, hyperparams):
@@ -129,6 +148,9 @@ def load_optimizer(model, hyperparams):
         optimizer (torch.optim): Optimizer
     """
 
+    device = torch.device(
+        'cuda') if torch.cuda.is_available() else torch.device('cpu')
+
     if hyperparams["optimizer"] == "adam":
         optimizer = torch.optim.Adam(
             model.parameters(), lr=hyperparams["learning_rate"])
@@ -137,5 +159,14 @@ def load_optimizer(model, hyperparams):
             model.parameters(), lr=hyperparams["learning_rate"])
     else:
         optimizer = None
+
+    if hyperparams["load_model_epoch"] and hyperparams["load_model_path"]:
+        model_file = wandb.restore("run_{}_epoch_{}.model".format(
+            hyperparams["load_model_path"].split(
+                "/")[-1], hyperparams["load_model_epoch"]), run_path=hyperparams["load_model_path"])
+        checkpoint = torch.load(
+            model_file.name, map_location=torch.device(device))
+
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
     return optimizer

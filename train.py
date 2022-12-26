@@ -21,8 +21,10 @@ print("Running on device: {}".format(device))
 hyperparams = load_hyperparams()
 pp.pprint(hyperparams, sort_dicts=False)
 run = wandb.init(
-    project="sensor-data-forecasting-{}".format(hyperparams["model"]), settings=wandb.Settings(start_method="fork"))
-wandb.config.update(hyperparams)
+    project="sensor-data-forecasting-{}".format(hyperparams["model"]), settings=wandb.Settings(start_method="fork"), resume="allow",
+    id=hyperparams["load_model_path"].split(
+        "/")[-1] if hyperparams["load_model_path"] else wandb.util.generate_id())
+wandb.config.update(hyperparams, allow_val_change=True)
 
 # Load synced data
 sensor_data = SyncedDataLoader(
@@ -47,9 +49,9 @@ test_loader = DataLoader(
     test_dataset, batch_size=hyperparams["batch_size"], shuffle=True, pin_memory=True)
 
 # Model, criterion and optimizer
-model = load_model(hyperparams)
-criterion = torch.nn.MSELoss()
+model, epoch_init = load_model(hyperparams)
 optimizer = load_optimizer(model, hyperparams)
+criterion = torch.nn.MSELoss()
 
 # get windows with hits
 train_windows_with_hits = random.choices(list(set([e[0] for e in np.argwhere(
@@ -60,7 +62,7 @@ test_windows_with_hits = random.choices(list(set([e[0] for e in np.argwhere(
     test_dataset.dataset.inputs[:, :, 1] > 0.6)])), k=hyperparams["plot_number"])  # sensor idx 1 --> accelerometer
 
 # epoch loop
-for epoch in range(1, hyperparams["epochs"]+1):
+for epoch in range(epoch_init, hyperparams["epochs"]+1):
 
     print("█▓░ Epoch: {} ░▓█".format(epoch))
 
