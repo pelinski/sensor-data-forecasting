@@ -110,8 +110,8 @@ def load_model(hyperparams):
         model = CustomLSTM(hidden_size=hyperparams["num_sensors"], input_size=hyperparams["num_sensors"], out_size=hyperparams["n_tgt_win"]*hyperparams["seq_len"], **hyperparams).to(
             device=device, non_blocking=True)
     elif hyperparams["model"] == "transformer":
-        model = TransformerEncoder(
-            **hyperparams).to(device=device, non_blocking=True)
+        model = TransformerEncoder(out_size=hyperparams["n_tgt_win"]*hyperparams["seq_len"],
+                                   **hyperparams).to(device=device, non_blocking=True)
     else:
         model = None
 
