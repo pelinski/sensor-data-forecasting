@@ -77,7 +77,7 @@ for epoch in range(epoch_init, hyperparams["epochs"]+1):
             :, :, 1:]  # remove piezo stick
 
         out = model(data)
-        train_loss = torch.sqrt(criterion(out, targets))
+        train_loss = criterion(out, targets)
         train_it_losses = np.append(train_it_losses, train_loss.item())
 
         # update

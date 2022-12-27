@@ -16,7 +16,7 @@ parameters:
   seq_len:
     value: 512
   n_tgt_win:
-    value: 3
+    value: 1
   num_sensors:
     value: 2
   batch_size:
