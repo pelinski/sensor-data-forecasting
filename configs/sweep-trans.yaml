@@ -12,9 +12,11 @@ parameters:
   model:
     value: "transformer"
   dataset:
-    value: "dataset/data/chaos-bells-2/processed/RX0"
+    value: "dataset/data/chaos-bells-3/processed/RX0"
   seq_len:
-    values: [16, 32, 64, 128]
+    value: 512
+  n_tgt_win:
+    value: 3
   num_sensors:
     value: 2
   embedding_size_src:
@@ -45,3 +47,7 @@ parameters:
     max: 12
   epochs:
     value: 100
+  save_and_plot_period:
+    value: 5
+  plot_number:
+    value: 10

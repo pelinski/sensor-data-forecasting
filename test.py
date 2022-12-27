@@ -11,10 +11,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 lstm_params = {
     "batch_size": 32,
     "seq_len": 10,
-    "input_size": 20,
     "hidden_size": 12,
     "out_size": 30,
-    "d_model": 128,
     "dropout": 0.2,
 }
 
@@ -25,11 +23,10 @@ class testLSTM(unittest.TestCase):
 
         batch_size = lstm_params["batch_size"]
         seq_len = lstm_params["seq_len"]
-        input_size = lstm_params["input_size"]
         hidden_size = lstm_params["hidden_size"]
         out_size = lstm_params["out_size"]
 
-        x = torch.rand(batch_size, seq_len, input_size).to(
+        x = torch.rand(batch_size, seq_len, hidden_size).to(
             device=device, non_blocking=True)
         lstm = CustomLSTM(**lstm_params).to(
             device=device, non_blocking=True)
@@ -55,6 +52,7 @@ transformer_params = {
     "num_heads": 8,
     "dim_feedforward": 256,
     "dropout": 0.2,
+    "n_tgt_win": 3,
     "num_encoder_layers": 7
 }
 
@@ -66,13 +64,13 @@ class test_transformer(unittest.TestCase):
         x = torch.rand(transformer_params["batch_size"], transformer_params["seq_len"], transformer_params["embedding_size_src"]).to(
             device=device, non_blocking=True)
 
-        model = TransformerEncoder(
-            **transformer_params).to(device=device, non_blocking=True)
+        model = TransformerEncoder(out_size=transformer_params["n_tgt_win"]*transformer_params["seq_len"],
+                                   **transformer_params).to(device=device, non_blocking=True)
 
         y = model.predict(x)
 
-        self.assertEqual(y.shape, (transformer_params["batch_size"], transformer_params["seq_len"], transformer_params["embedding_size_tgt"]),
-                         "output shape should be (batch_size, seq_len, embedding_size_tgt)")
+        self.assertEqual(y.shape, (transformer_params["batch_size"], transformer_params["n_tgt_win"]*transformer_params["seq_len"], transformer_params["embedding_size_tgt"]),
+                         "output shape should be (batch_size, n_tgt_win*seq_len, embedding_size_tgt)")
 
 
 class test_dataset(unittest.TestCase):

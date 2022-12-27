@@ -11,6 +11,7 @@ class TransformerEncoder(torch.nn.Module):
             d_model (int, optional): Size of the model internal embeddings. Defaults to 64.
             embedding_size_src (int): Embedding size of source. Defaults to 8.
             embedding_size_tgt (int): Embedding size of target. Defaults to 8.
+            out_size (int): Output sequence length. Defaults to 32. 
             num_heads (int, optional): Number of heads in the multihead attention. Defaults to 16.
             dim_feedforward (int, optional): Size of the feedforward network. Defaults to 256.
             dropout (float, optional): Dropout rate. Defaults to 0.1.
@@ -22,6 +23,7 @@ class TransformerEncoder(torch.nn.Module):
         self.d_model = kwargs.get("d_model", 64)
         self.embedding_size_src = kwargs.get("embedding_size_src", 8)
         self.embedding_size_tgt = kwargs.get("embedding_size_tgt", 8)
+        self.out_size = kwargs.get("out_size", 32)
         self.num_heads = kwargs.get("num_heads", 16)
         self.dim_feedforward = kwargs.get("dim_feedforward", 256)
         self.dropout = kwargs.get("dropout", 0.1)
@@ -43,9 +45,11 @@ class TransformerEncoder(torch.nn.Module):
             self.encoder_layer, num_layers=self.num_encoder_layers)
         self.out_linear = torch.nn.Linear(
             self.d_model, self.embedding_size_tgt)
+        self.out_linear_proj = torch.nn.Linear(self.seq_len, self.out_size)
 
         self.init_weights(self.in_linear)
         self.init_weights(self.out_linear)
+        self.init_weights(self.out_linear_proj)
 
     def init_weights(self, module, initrange=0.1):
         module.bias.data.zero_()
@@ -68,8 +72,11 @@ class TransformerEncoder(torch.nn.Module):
             src, self.src_mask)  # (seq_len, batch_size, d_model)
         # (seq_len, batch_size, embedding_size_tgt)
         out = self.out_linear(memory)
-
-        out = out.permute(1, 0, 2)  # (batch_size, seq_len, embedding_size_tgt)
+        out = out.permute(1, 2, 0)  # (batch_size, embedding_size_tgt,seq_len)
+        # (batch_size, embedding_size_tgt,out_size)
+        out = self.out_linear_proj(out)
+        # (batch_size, out_size, embedding_size_tgt)
+        out = out.permute(0, 2, 1)
 
         return out
 

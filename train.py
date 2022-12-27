@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 from DataSyncer import SyncedDataLoader
 from dataset.dataset import ForecastingTorchDataset
 from utils.plotter import get_html_plot
-from utils.loaders import load_hyperparams, load_model, load_optimizer
+from utils.loaders import load_hyperparams, load_model, load_optimizer, load_scheduler
 from utils.saver import save_model
 
 device = torch.device(
@@ -21,8 +21,10 @@ print("Running on device: {}".format(device))
 hyperparams = load_hyperparams()
 pp.pprint(hyperparams, sort_dicts=False)
 run = wandb.init(
-    project="sensor-data-forecasting-{}".format(hyperparams["model"]), settings=wandb.Settings(start_method="fork"))
-wandb.config.update(hyperparams)
+    project="sensor-data-forecasting-{}".format(hyperparams["model"]), settings=wandb.Settings(start_method="fork"), resume="allow",
+    id=hyperparams["load_model_path"].split(
+        "/")[-1] if hyperparams["load_model_path"] else wandb.util.generate_id())
+wandb.config.update(hyperparams, allow_val_change=True)
 
 # Load synced data
 sensor_data = SyncedDataLoader(
@@ -47,9 +49,10 @@ test_loader = DataLoader(
     test_dataset, batch_size=hyperparams["batch_size"], shuffle=True, pin_memory=True)
 
 # Model, criterion and optimizer
-model = load_model(hyperparams)
-criterion = torch.nn.MSELoss()
+model, epoch_init = load_model(hyperparams)
 optimizer = load_optimizer(model, hyperparams)
+criterion = torch.nn.L1Loss(reduction='mean')
+scheduler = load_scheduler(hyperparams, optimizer)
 
 # get windows with hits
 train_windows_with_hits = random.choices(list(set([e[0] for e in np.argwhere(
@@ -60,7 +63,7 @@ test_windows_with_hits = random.choices(list(set([e[0] for e in np.argwhere(
     test_dataset.dataset.inputs[:, :, 1] > 0.6)])), k=hyperparams["plot_number"])  # sensor idx 1 --> accelerometer
 
 # epoch loop
-for epoch in range(1, hyperparams["epochs"]+1):
+for epoch in range(epoch_init, hyperparams["epochs"]+1):
 
     print("█▓░ Epoch: {} ░▓█".format(epoch))
 
@@ -75,17 +78,18 @@ for epoch in range(1, hyperparams["epochs"]+1):
             :, :, 1:]  # remove piezo stick
 
         out = model(data)
-        train_loss = torch.sqrt(criterion(out, targets))
+        train_loss = criterion(out, targets)
         train_it_losses = np.append(train_it_losses, train_loss.item())
 
         # update
-        optimizer.zero_grad(set_to_none=True)
+        optimizer.zero_grad(set_to_none=True)  # lower memory footprint
         train_loss.backward()
         optimizer.step()
+        scheduler.step()
 
-        # bokeh plot of some batches every hyperparams["save_and_plot_period"] epochs, save model
+    # bokeh plot of some batches every hyperparams["save_and_plot_period"] epochs, save model
     if hyperparams["save_and_plot_period"] and epoch % hyperparams["save_and_plot_period"] == 0:
-        save_model(model, optimizer, hyperparams, epoch)
+        save_model(model, optimizer, scheduler, hyperparams, epoch)
         # remove piezo stick
         inputs = torch.Tensor(
             train_dataset.dataset.inputs[train_windows_with_hits]).to(device=device)
@@ -110,9 +114,8 @@ for epoch in range(1, hyperparams["epochs"]+1):
         validation_it_losses = np.append(
             validation_it_losses, validation_loss.item())
 
-        # bokeh plot of some batches every hyperparams["save_and_plot_period"] epochs
+    # bokeh plot of some batches every hyperparams["save_and_plot_period"] epochs
     if hyperparams["save_and_plot_period"] and epoch % hyperparams["save_and_plot_period"] == 0:
-        # remove piezo stick
         inputs = torch.Tensor(
             validation_dataset.dataset.inputs[validation_windows_with_hits]).to(device=device)
         targets = torch.Tensor(
