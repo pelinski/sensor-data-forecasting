@@ -20,13 +20,12 @@ class CustomLSTM(nn.Module):  # short version using matrices
         super().__init__()
         self.seq_len = kwargs.get("seq_len", 10)
         self.out_size = kwargs.get("out_size", 30)
-        self.input_size = kwargs.get("input_size", 8)
         self.hidden_size = kwargs.get("hidden_size", 4)
         self.dropout_p = kwargs.get("dropout", 0.2)
 
         # matrices containing weights for input, hidden and bias for each of the 4 gates
         self.W = nn.Parameter(torch.Tensor(
-            self.input_size, self.hidden_size*4))
+            self.hidden_size, self.hidden_size*4))
         self.U = nn.Parameter(torch.Tensor(
             self.hidden_size, self.hidden_size*4))
 

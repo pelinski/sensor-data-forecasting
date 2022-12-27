@@ -114,9 +114,8 @@ for epoch in range(epoch_init, hyperparams["epochs"]+1):
         validation_it_losses = np.append(
             validation_it_losses, validation_loss.item())
 
-        # bokeh plot of some batches every hyperparams["save_and_plot_period"] epochs
+    # bokeh plot of some batches every hyperparams["save_and_plot_period"] epochs
     if hyperparams["save_and_plot_period"] and epoch % hyperparams["save_and_plot_period"] == 0:
-        # remove piezo stick
         inputs = torch.Tensor(
             validation_dataset.dataset.inputs[validation_windows_with_hits]).to(device=device)
         targets = torch.Tensor(
