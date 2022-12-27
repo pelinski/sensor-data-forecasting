@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 from DataSyncer import SyncedDataLoader
 from dataset.dataset import ForecastingTorchDataset
 from utils.plotter import get_html_plot
-from utils.loaders import load_hyperparams, load_model, load_optimizer
+from utils.loaders import load_hyperparams, load_model, load_optimizer, load_scheduler
 from utils.saver import save_model
 
 device = torch.device(
@@ -51,7 +51,8 @@ test_loader = DataLoader(
 # Model, criterion and optimizer
 model, epoch_init = load_model(hyperparams)
 optimizer = load_optimizer(model, hyperparams)
-criterion = torch.nn.MSELoss()
+criterion = torch.nn.L1Loss(reduction='mean')
+scheduler = load_scheduler(hyperparams, optimizer)
 
 # get windows with hits
 train_windows_with_hits = random.choices(list(set([e[0] for e in np.argwhere(
@@ -81,13 +82,14 @@ for epoch in range(epoch_init, hyperparams["epochs"]+1):
         train_it_losses = np.append(train_it_losses, train_loss.item())
 
         # update
-        optimizer.zero_grad(set_to_none=True)
+        optimizer.zero_grad(set_to_none=True)  # lower memory footprint
         train_loss.backward()
         optimizer.step()
+        scheduler.step()
 
-        # bokeh plot of some batches every hyperparams["save_and_plot_period"] epochs, save model
+    # bokeh plot of some batches every hyperparams["save_and_plot_period"] epochs, save model
     if hyperparams["save_and_plot_period"] and epoch % hyperparams["save_and_plot_period"] == 0:
-        save_model(model, optimizer, hyperparams, epoch)
+        save_model(model, optimizer, scheduler, hyperparams, epoch)
         # remove piezo stick
         inputs = torch.Tensor(
             train_dataset.dataset.inputs[train_windows_with_hits]).to(device=device)

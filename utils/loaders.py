@@ -35,6 +35,10 @@ def load_hyperparams():
     parser.add_argument(
         "--optimizer", help="optimizer algorithm", default='sgd', type=str)
     parser.add_argument(
+        "--lr_scheduler_step_size", help="learning rate scheduler step size", default=50, type=int)
+    parser.add_argument(
+        "--lr_scheduler_gamma", help="learning rate scheduler gamma", default=0.1, type=float)
+    parser.add_argument(
         "--epochs", help="number of training epochs", default=1, type=int)
     parser.add_argument("--d_model", help="model dimension",
                         default=64, type=int)
@@ -82,6 +86,8 @@ def load_hyperparams():
                    "dropout": hp["dropout"] if "dropout" in hp else args.dropout,
                    "learning_rate": hp["learning_rate"] if "learning_rate" in hp else args.learning_rate,
                    "optimizer": hp["optimizer"] if "optimizer" in hp else args.optimizer,
+                   "lr_scheduler_step_size": hp["lr_scheduler_step_size"] if "lr_scheduler_step_size" in hp else args.lr_scheduler_step_size,
+                   "lr_scheduler_gamma": hp["lr_scheduler_gamma"] if "lr_scheduler_gamma" in hp else args.lr_scheduler_gamma,
                    "save_and_plot_period": hp["save_and_plot_period"] if "save_and_plot_period" in hp else args.save_and_plot_period,
                    "plot_number": hp["plot_number"] if "plot_number" in hp else args.plot_number,
                    "load_model_epoch": hp["load_model_epoch"] if "load_model_epoch" in hp else args.load_model_epoch,
@@ -170,3 +176,31 @@ def load_optimizer(model, hyperparams):
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
     return optimizer
+
+
+def load_scheduler(hyperparams, optimizer):
+    """ Creates schedulers based on hyperparameters.
+
+    Args:
+        hyperparams (dict): dict containing hyperparameters
+
+    Returns:
+        scheduler (torch.nn.Module): scheduler based on hyperparameters
+    """
+
+    device = torch.device(
+        'cuda') if torch.cuda.is_available() else torch.device('cpu')
+
+    scheduler = torch.optim.lr_scheduler.StepLR(
+        optimizer, step_size=hyperparams["lr_scheduler_step_size"], gamma=hyperparams["lr_scheduler_gamma"])
+
+    if hyperparams["load_model_epoch"] and hyperparams["load_model_path"]:
+        model_file = wandb.restore("run_{}_epoch_{}.model".format(
+            hyperparams["load_model_path"].split(
+                "/")[-1], hyperparams["load_model_epoch"]), run_path=hyperparams["load_model_path"])
+        checkpoint = torch.load(
+            model_file.name, map_location=torch.device(device))
+
+        scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+
+    return scheduler
