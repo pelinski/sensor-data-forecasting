@@ -4,19 +4,19 @@ method: bayes
 metric:
   goal: minimize
   name: validation_loss
-run_cap: 15
+run_cap: 20
 early_terminate:
   type: hyperband
-  min_iter: 10
+  min_iter: 50
 parameters:
   model:
     value: "lstm"
   dataset:
-    value: "dataset/data/chaos-bells-3/processed/RX0"
+    value: "dataset/data/chaos-bells-4/processed/RX0"
   seq_len:
     value: 512
   n_tgt_win:
-    value: 1
+    value: 3
   num_sensors:
     value: 2
   batch_size:
@@ -28,7 +28,7 @@ parameters:
     min: 0
     max: 0.1
   epochs:
-    value: 100
+    value: 400
   save_and_plot_period:
     value: 5
   plot_number:

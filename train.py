@@ -55,12 +55,13 @@ criterion = torch.nn.L1Loss(reduction='mean')
 scheduler = load_scheduler(hyperparams, optimizer)
 
 # get windows with hits
+threshold = 0.55
 train_windows_with_hits = random.choices(list(set([e[0] for e in np.argwhere(
-    train_dataset.dataset.inputs[:, :, 1] > 0.6)])), k=hyperparams["plot_number"])  # sensor idx 1 --> accelerometer
+    train_dataset.dataset.inputs[:, :, 1] > threshold)])), k=hyperparams["plot_number"])  # sensor idx 1 --> accelerometer
 validation_windows_with_hits = random.choices(list(set([e[0] for e in np.argwhere(
-    validation_dataset.dataset.inputs[:, :, 1] > 0.6)])), k=hyperparams["plot_number"])  # sensor idx 1 --> accelerometer
+    validation_dataset.dataset.inputs[:, :, 1] > threshold)])), k=hyperparams["plot_number"])  # sensor idx 1 --> accelerometer
 test_windows_with_hits = random.choices(list(set([e[0] for e in np.argwhere(
-    test_dataset.dataset.inputs[:, :, 1] > 0.6)])), k=hyperparams["plot_number"])  # sensor idx 1 --> accelerometer
+    test_dataset.dataset.inputs[:, :, 1] > threshold)])), k=hyperparams["plot_number"])  # sensor idx 1 --> accelerometer
 
 # epoch loop
 for epoch in range(epoch_init, hyperparams["epochs"]+1):
