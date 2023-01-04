@@ -83,6 +83,7 @@ def load_hyperparams():
                    "epochs": hp["epochs"] if "epochs" in hp else args.epochs,
                    "batch_size": hp["batch_size"] if "batch_size" in hp else args.batch_size,
                    "seq_len": hp["seq_len"] if "seq_len" in hp else args.seq_len,
+                   "d_model": hp["d_model"] if "d_model" in hp else args.d_model,
                    "dropout": hp["dropout"] if "dropout" in hp else args.dropout,
                    "learning_rate": hp["learning_rate"] if "learning_rate" in hp else args.learning_rate,
                    "optimizer": hp["optimizer"] if "optimizer" in hp else args.optimizer,
@@ -100,7 +101,6 @@ def load_hyperparams():
              "num_heads": hp["num_heads"] if "num_heads" in hp else args.n_heads,
              "dim_feedforward": hp["dim_feedforward"] if "dim_feedforward" in hp else args.dim_feedforward,
              "num_encoder_layers": hp["num_encoder_layers"] if "num_encoder_layers" in hp else args.num_encoder_layers,
-             "d_model": hp["d_model"] if "d_model" in hp else args.d_model,
              }
         )
 

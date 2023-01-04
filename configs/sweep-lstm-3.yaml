@@ -21,6 +21,8 @@ parameters:
     value: 2
   batch_size:
     values: [16, 32, 64, 128, 256, 512]
+  d_model:
+    values: [16, 32, 64, 128, 256, 512]
   optimizer:
     values: ["sgd", "adam"]
   learning_rate:
