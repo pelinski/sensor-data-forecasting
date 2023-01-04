@@ -113,7 +113,7 @@ class CustomLSTM(nn.Module):  # short version using matrices
             out = self.fc1(out)  # (batch_size, hidden_size, out_size)
             out = self.relu(out)  # (batch_size, hidden_size, out_size)
             out = self.fc2(out)  # (batch_size, hidden_size, out_size)
-            out = self.relu(out)
+            # out = self.relu(out)
             out = out.permute(0, 2, 1)  # (batch_size, out_size, hidden_size)
 
         out = self.dropout(out)
