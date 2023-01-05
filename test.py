@@ -1,10 +1,14 @@
 import torch
 import unittest
 import numpy as np
+import os
+import tensorflow as tf
 from DataSyncer import SyncedDataLoader
-from models.lstm import CustomLSTM
+from model.lstm import CustomLSTM
 from dataset.dataset import ForecastingTorchDataset
-from models.transformer import TransformerEncoder
+from model.transformer import TransformerEncoder
+from utils.loaders import load_model, load_hyperparams_from_wandb
+from export import export_to_tflite
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -31,16 +35,18 @@ class testLSTM(unittest.TestCase):
         lstm = CustomLSTM(**lstm_params).to(
             device=device, non_blocking=True)
 
-        hidden_seq, (h_t, c_t) = lstm.predict(x, return_states=True)
+        # hidden_seq, (h_t, c_t) = lstm.predict(x, return_states=True)
 
-        self.assertEqual(hidden_seq.shape, (batch_size, out_size, hidden_size),
+        out_seq = lstm.predict(x, return_states=True)
+
+        self.assertEqual(out_seq.shape, (batch_size, out_size, hidden_size-1),
                          "output shape should be (batch_size, out_size, hidden_size")
 
-        self.assertEqual(h_t.shape, (batch_size, hidden_size),
-                         "hidden state shape should be (batch_size, hidden_size)")
+        # self.assertEqual(h_t.shape, (batch_size, hidden_size),
+        #                  "hidden state shape should be (batch_size, hidden_size)")
 
-        self.assertEqual(c_t.shape, (batch_size, hidden_size),
-                         "cell state shape should be (batch_size, hidden_size)")
+        # self.assertEqual(c_t.shape, (batch_size, hidden_size),
+        #                  "cell state shape should be (batch_size, hidden_size)")
 
 
 transformer_params = {
@@ -89,6 +95,45 @@ class test_dataset(unittest.TestCase):
 
         self.assertEqual(dataset.targets.shape, (len(dataset.sequences)-n_target_windows, seq_len*n_target_windows, num_sensors),
                          "target shape should be(len(dataset.sequences)-n_target_windows, seq_len*n_target_windows, num_sensors)")
+
+
+class test_export_to_tflite(unittest.TestCase):
+
+    def test_export(self):
+        run_path = "pelinski/test-lstm/30nskje9"
+        epoch = 80
+
+        run_id = run_path.split("/")[-1]
+        params_filename = "{}-params.pk".format(run_id)
+        params = load_hyperparams_from_wandb(
+            params_filename, run_path)
+        os.remove(params_filename)
+
+        model, epoch = load_model(params)
+        converted_model_path = "run_{}_epoch_{}.tflite".format(run_id, epoch-1)
+
+        # dummy input
+        dummy_input = torch.randn(
+            params["batch_size"], params["seq_len"], params["num_sensors"])
+
+        export_to_tflite(model, dummy_input, converted_model_path)
+
+        dummy_output = model.predict(dummy_input)
+
+        interpreter = tf.lite.Interpreter(model_path=converted_model_path)
+        interpreter.allocate_tensors()
+
+        input_details = interpreter.get_input_details()
+        output_details = interpreter.get_output_details()
+
+        interpreter.set_tensor(input_details[0]['index'], dummy_input)
+        interpreter.invoke()
+        output_arr = interpreter.get_tensor(output_details[0]['index'])
+        
+        os.remove(converted_model_path)
+
+        self.assertAlmostEqual(np.sum(output_arr), np.sum(
+            dummy_output.detach().numpy()), places=4, msg="model output before and after conversion should be the same")
 
 
 if __name__ == '__main__':

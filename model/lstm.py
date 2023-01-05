@@ -118,10 +118,10 @@ class CustomLSTM(nn.Module):  # short version using matrices
 
         out = self.dropout(out)
 
-        if return_states:
-            return out, (h_t, c_t)
-        else:
-            return out[:, :, 1:]  # remove piezo stick
+        # if return_states:
+        #     return out, (h_t, c_t)
+        # else:
+        return out[:, :, 1:]  # remove piezo stick
 
     def predict(self, x, init_states=None, return_states=False):
         """LSTM predict method

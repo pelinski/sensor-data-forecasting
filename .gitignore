@@ -6,5 +6,7 @@ wandb/
 dev/
 dataset/data/*/
 !dataset/data/test/
-export_to_onnx.py
+*.pk
+*.tflite
 *.model
+trained_models/

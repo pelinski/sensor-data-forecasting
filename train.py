@@ -10,21 +10,21 @@ from DataSyncer import SyncedDataLoader
 from dataset.dataset import ForecastingTorchDataset
 from utils.plotter import get_html_plot
 from utils.loaders import load_hyperparams, load_model, load_optimizer, load_scheduler
-from utils.saver import save_model
+from utils.saver import save_model, save_params
 
 device = torch.device(
     'cuda') if torch.cuda.is_available() else torch.device('cpu')
 print("Running on device: {}".format(device))
-
 
 # Load hyperparameters and update wandb config
 hyperparams = load_hyperparams()
 pp.pprint(hyperparams, sort_dicts=False)
 run = wandb.init(
     project="sensor-data-forecasting-{}".format(hyperparams["model"]), settings=wandb.Settings(start_method="fork"), resume="allow",
-    id=hyperparams["load_model_path"].split(
-        "/")[-1] if hyperparams["load_model_path"] else wandb.util.generate_id())
+    id=hyperparams["run_path"].split(
+        "/")[-1] if hyperparams["run_path"] else wandb.util.generate_id())
 wandb.config.update(hyperparams, allow_val_change=True)
+save_params(hyperparams, wandb.run)
 
 # Load synced data
 sensor_data = SyncedDataLoader(
