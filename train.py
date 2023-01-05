@@ -91,7 +91,6 @@ for epoch in range(epoch_init, hyperparams["epochs"]+1):
     # bokeh plot of some batches every hyperparams["save_and_plot_period"] epochs, save model
     if hyperparams["save_and_plot_period"] and epoch % hyperparams["save_and_plot_period"] == 0:
         save_model(model, optimizer, scheduler, hyperparams, epoch)
-        # remove piezo stick
         inputs = torch.Tensor(
             train_dataset.dataset.inputs[train_windows_with_hits]).to(device=device)
         targets = torch.Tensor(

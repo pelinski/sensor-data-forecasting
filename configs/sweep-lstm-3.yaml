@@ -7,7 +7,7 @@ metric:
 run_cap: 20
 early_terminate:
   type: hyperband
-  min_iter: 50
+  min_iter: 100
 parameters:
   model:
     value: "lstm"
@@ -30,12 +30,16 @@ parameters:
     min: 0
     max: 0.1
   epochs:
-    value: 250
+    value: 500
   save_and_plot_period:
-    value: 5
+    value: 20
   plot_number:
     value: 10
   dropout:
     distribution: "uniform"
     min: 0.1
     max: 0.3
+  lr_scheduler_step:
+    values: [30, 40, 50, 80]
+  lr_scheduler_gamma:
+    values: [0.1, 0.001, 0.0001]
