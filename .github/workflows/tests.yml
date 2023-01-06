@@ -29,11 +29,11 @@ jobs:
 
       - name: Install OS specific dependencies - ubuntu
         if: ${{ matrix.os == 'ubuntu-latest' }}
-        run: pipenv run pip install torch --extra-index-url https://download.pytorch.org/whl/cu116
+        run: pipenv run pip install torch --extra-index-url https://download.pytorch.org/whl/cu116; pipenv run pip install tensorflow
 
       - name: Install OS specific dependencies - macos
         if: ${{ matrix.os == 'macos-latest' }}
-        run: pipenv run pip install torch
+        run: pipenv run pip install torch; pipenv run pip install tensorflow
 
       - name: Install python dependencies
         run: pipenv install -d

@@ -1,11 +1,11 @@
 import wandb
 import torch
+import pickle
 import yaml
 import argparse
-import pprint as pp
 
-from models.lstm import CustomLSTM
-from models.transformer import TransformerEncoder
+from model.lstm import CustomLSTM
+from model.transformer import TransformerEncoder
 
 
 def load_hyperparams():
@@ -65,7 +65,7 @@ def load_hyperparams():
         "--load_model_epoch",
         help="load model at epoch", default=None, type=int,)
     parser.add_argument(
-        "--load_model_path",
+        "--run_path",
         help="wandb path to load model from", default=None, type=str,)
 
     args = parser.parse_args()
@@ -83,6 +83,7 @@ def load_hyperparams():
                    "epochs": hp["epochs"] if "epochs" in hp else args.epochs,
                    "batch_size": hp["batch_size"] if "batch_size" in hp else args.batch_size,
                    "seq_len": hp["seq_len"] if "seq_len" in hp else args.seq_len,
+                   "d_model": hp["d_model"] if "d_model" in hp else args.d_model,
                    "dropout": hp["dropout"] if "dropout" in hp else args.dropout,
                    "learning_rate": hp["learning_rate"] if "learning_rate" in hp else args.learning_rate,
                    "optimizer": hp["optimizer"] if "optimizer" in hp else args.optimizer,
@@ -91,7 +92,7 @@ def load_hyperparams():
                    "save_and_plot_period": hp["save_and_plot_period"] if "save_and_plot_period" in hp else args.save_and_plot_period,
                    "plot_number": hp["plot_number"] if "plot_number" in hp else args.plot_number,
                    "load_model_epoch": hp["load_model_epoch"] if "load_model_epoch" in hp else args.load_model_epoch,
-                   "load_model_path": hp["load_model_path"] if "load_model_path" in hp else args.load_model_path,
+                   "run_path": hp["run_path"] if "run_path" in hp else args.run_path,
                    "device": torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')}
     if hyperparams["model"] == "transformer":
         hyperparams.update(
@@ -100,14 +101,13 @@ def load_hyperparams():
              "num_heads": hp["num_heads"] if "num_heads" in hp else args.n_heads,
              "dim_feedforward": hp["dim_feedforward"] if "dim_feedforward" in hp else args.dim_feedforward,
              "num_encoder_layers": hp["num_encoder_layers"] if "num_encoder_layers" in hp else args.num_encoder_layers,
-             "d_model": hp["d_model"] if "d_model" in hp else args.d_model,
              }
         )
 
     return dict(hyperparams)
 
 
-def load_model(hyperparams):
+def load_model(hyperparams, root=None):
     """ Creates models based on hyperparameters.
 
     Args:
@@ -130,9 +130,9 @@ def load_model(hyperparams):
     else:
         model = None
 
-    if hyperparams["load_model_epoch"] and hyperparams["load_model_path"]:
-        model_file = wandb.restore("run_{}_epoch_{}.model".format(hyperparams["load_model_path"].split(
-            "/")[-1], hyperparams["load_model_epoch"]), run_path=hyperparams["load_model_path"])
+    if hyperparams["load_model_epoch"] and hyperparams["run_path"]:
+        model_file = wandb.restore("run_{}_epoch_{}.model".format(hyperparams["run_path"].split(
+            "/")[-1], hyperparams["load_model_epoch"]), run_path=hyperparams["run_path"], root=root)
         checkpoint = torch.load(
             model_file.name, map_location=torch.device(device))
         model.load_state_dict(checkpoint["model_state_dict"])
@@ -166,10 +166,10 @@ def load_optimizer(model, hyperparams):
     else:
         optimizer = None
 
-    if hyperparams["load_model_epoch"] and hyperparams["load_model_path"]:
+    if hyperparams["load_model_epoch"] and hyperparams["run_path"]:
         model_file = wandb.restore("run_{}_epoch_{}.model".format(
-            hyperparams["load_model_path"].split(
-                "/")[-1], hyperparams["load_model_epoch"]), run_path=hyperparams["load_model_path"])
+            hyperparams["run_path"].split(
+                "/")[-1], hyperparams["load_model_epoch"]), run_path=hyperparams["run_path"])
         checkpoint = torch.load(
             model_file.name, map_location=torch.device(device))
 
@@ -194,13 +194,30 @@ def load_scheduler(hyperparams, optimizer):
     scheduler = torch.optim.lr_scheduler.StepLR(
         optimizer, step_size=hyperparams["lr_scheduler_step_size"], gamma=hyperparams["lr_scheduler_gamma"])
 
-    if hyperparams["load_model_epoch"] and hyperparams["load_model_path"]:
+    if hyperparams["load_model_epoch"] and hyperparams["run_path"]:
         model_file = wandb.restore("run_{}_epoch_{}.model".format(
-            hyperparams["load_model_path"].split(
-                "/")[-1], hyperparams["load_model_epoch"]), run_path=hyperparams["load_model_path"])
+            hyperparams["run_path"].split(
+                "/")[-1], hyperparams["load_model_epoch"]), run_path=hyperparams["run_path"])
         checkpoint = torch.load(
             model_file.name, map_location=torch.device(device))
 
         scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
 
     return scheduler
+
+
+def load_hyperparams_from_wandb(filename, run_path, root=None):
+    """_summary_
+
+    Args:
+        filename (str): hyperparams filename in wandb
+        run_path (str): wandb run path 
+
+    Returns:
+        hp (dict): hyperparams dict
+    """
+
+    hyperparams_fn = wandb.restore(filename, run_path=run_path, root=root).name
+    with open(hyperparams_fn, 'rb') as f:
+        hp = pickle.load(f)
+    return hp
