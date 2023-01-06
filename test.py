@@ -1,6 +1,7 @@
 import torch
 import unittest
 import numpy as np
+import pickle
 import os
 import tensorflow as tf
 from DataSyncer import SyncedDataLoader
@@ -100,21 +101,21 @@ class test_dataset(unittest.TestCase):
 class test_export_to_tflite(unittest.TestCase):
 
     def test_export(self):
-        run_path = "pelinski/test-lstm/30nskje9"
-        epoch = 80
-
-        run_id = run_path.split("/")[-1]
-        params_filename = "{}-params.pk".format(run_id)
-        params = load_hyperparams_from_wandb(
-            params_filename, run_path)
-        os.remove(params_filename)
-
-        model, epoch = load_model(params)
-        converted_model_path = "run_{}_epoch_{}.tflite".format(run_id, epoch-1)
-
-        # dummy input
+        
+        with open("dataset/data/test/test-params.pk", 'rb') as f:
+            hyperparams = pickle.load(f)
+        
+        model = CustomLSTM(hidden_size=hyperparams["num_sensors"], out_size=hyperparams["n_tgt_win"]*hyperparams["seq_len"], **hyperparams).to(
+    device=device, non_blocking=True)
+        
+        checkpoint = torch.load(
+            "dataset/data/test/test.model", map_location=torch.device(device))
+        model.load_state_dict(checkpoint["model_state_dict"])
+        
         dummy_input = torch.randn(
-            params["batch_size"], params["seq_len"], params["num_sensors"])
+        hyperparams["batch_size"], hyperparams["seq_len"], hyperparams["num_sensors"])
+        
+        converted_model_path = "dataset/data/test/test.tflite"
 
         export_to_tflite(model, dummy_input, converted_model_path)
 
@@ -132,8 +133,7 @@ class test_export_to_tflite(unittest.TestCase):
         
         os.remove(converted_model_path)
 
-        self.assertAlmostEqual(np.sum(output_arr), np.sum(
-            dummy_output.detach().numpy()), places=4, msg="model output before and after conversion should be the same")
+        self.assertEqual(len(np.argwhere(output_arr-dummy_output.detach().numpy()>0.0001)),0,  msg="model output before and after conversion should be the same")
 
 
 if __name__ == '__main__':
