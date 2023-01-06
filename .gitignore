@@ -6,3 +6,5 @@ wandb/
 dev/
 dataset/data/*/
 !dataset/data/test/
+*.tflite
+trained_models/
