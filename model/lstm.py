@@ -20,21 +20,20 @@ class CustomLSTM(nn.Module):  # short version using matrices
         super().__init__()
         self.seq_len = kwargs.get("seq_len", 10)
         self.out_size = kwargs.get("out_size", 30)
+        self.input_size = kwargs.get("input_size", 2)
         self.hidden_size = kwargs.get("hidden_size", 4)
-        self.d_model = kwargs.get("d_model", 128)
         self.dropout_p = kwargs.get("dropout", 0.2)
 
         # matrices containing weights for input, hidden and bias for each of the 4 gates
         self.W = nn.Parameter(torch.Tensor(
-            self.hidden_size, self.hidden_size*4))
+            self.input_size, self.hidden_size*4))
         self.U = nn.Parameter(torch.Tensor(
             self.hidden_size, self.hidden_size*4))
 
         self.bias = nn.Parameter(torch.Tensor(self.hidden_size*4))
         self.relu = nn.ReLU()
-        self.fc1 = nn.Linear(
-            self.seq_len, self.d_model)
-        self.fc2 = nn.Linear(self.d_model, self.out_size)
+        self.dense = nn.Linear(
+            self.hidden_size, self.out_size)
         self.dropout = nn.Dropout(self.dropout_p)
 
         self.init_weights()
@@ -43,12 +42,9 @@ class CustomLSTM(nn.Module):  # short version using matrices
         stdv = 1.0 / math.sqrt(self.hidden_size)
         for weight in self.parameters():
             weight.data.uniform_(-stdv, stdv)
-
-        #init weights in linear layers out
-        self.fc1.bias.data.zero_()
-        self.fc1.weight.data.uniform_(-stdv, stdv)
-        self.fc2.bias.data.zero_()
-        self.fc2.weight.data.uniform_(-stdv, stdv)
+        #init weights in out linear layer
+        self.dense.bias.data.zero_()
+        self.dense.weight.data.uniform_(-stdv, stdv)
 
     def forward(self, x, init_states=None, return_states=False):
         """LSTM forward pass
@@ -104,24 +100,20 @@ class CustomLSTM(nn.Module):  # short version using matrices
         hidden_seq = hidden_seq.transpose(0,
                                           1).contiguous()  # (batch_size, sequence_length, hidden_size). contiguous returns a tensor contiguous in memory
 
-        # (sequence_length, batch_size, hidden_size)
+        # (batch_size, seq_len, hidden_size)
         out = self.relu(hidden_seq)
+        
+        # last predicted output contains information of the previous outputs
+        last_out = out[:,-1,:] # (batch_size, hidden_size)
 
-        # # project into out_size
-        if self.out_size != self.seq_len:  # if more than 1 tgt window, project sequence into out_size
-            out = out.permute(0, 2, 1)  # (batch_size, hidden_size, seq_len)
-            out = self.fc1(out)  # (batch_size, hidden_size, d_model)
-            out = self.relu(out)  # (batch_size, hidden_size, d_model)
-            out = self.fc2(out)  # (batch_size, hidden_size, out_size)
-            # out = self.relu(out)
-            out = out.permute(0, 2, 1)  # (batch_size, out_size, hidden_size)
+        # project hidden_size into out_size
+        y = self.dense(last_out)  # (batch_size, out_size)
+        
+        y = self.relu(y)  # (batch_size, out_size)
+        y = self.dropout(y) # (batch_size, out_size)
+        y = y.unsqueeze(2) # (batch_size, out_size, 1) --> for compatibility with transformer
 
-        out = self.dropout(out)
-
-        # if return_states:
-        #     return out, (h_t, c_t)
-        # else:
-        return out[:, :, 1:]  # remove piezo stick
+        return y
 
     def predict(self, x, init_states=None, return_states=False):
         """LSTM predict method

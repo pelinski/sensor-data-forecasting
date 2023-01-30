@@ -15,6 +15,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 lstm_params = {
     "batch_size": 32,
+    "input_size": 2,
     "seq_len": 10,
     "hidden_size": 12,
     "out_size": 30,
@@ -25,29 +26,16 @@ lstm_params = {
 class testLSTM(unittest.TestCase):
 
     def test_shapes(self):
-
-        batch_size = lstm_params["batch_size"]
-        seq_len = lstm_params["seq_len"]
-        hidden_size = lstm_params["hidden_size"]
-        out_size = lstm_params["out_size"]
-
-        x = torch.rand(batch_size, seq_len, hidden_size).to(
+        
+        x = torch.rand(lstm_params["batch_size"], lstm_params["seq_len"], lstm_params["input_size"]).to(
             device=device, non_blocking=True)
         lstm = CustomLSTM(**lstm_params).to(
             device=device, non_blocking=True)
 
-        # hidden_seq, (h_t, c_t) = lstm.predict(x, return_states=True)
-
         out_seq = lstm.predict(x, return_states=True)
 
-        self.assertEqual(out_seq.shape, (batch_size, out_size, hidden_size-1),
+        self.assertEqual(out_seq.shape, (lstm_params["batch_size"], lstm_params["out_size"], 1),
                          "output shape should be (batch_size, out_size, hidden_size")
-
-        # self.assertEqual(h_t.shape, (batch_size, hidden_size),
-        #                  "hidden state shape should be (batch_size, hidden_size)")
-
-        # self.assertEqual(c_t.shape, (batch_size, hidden_size),
-        #                  "cell state shape should be (batch_size, hidden_size)")
 
 
 transformer_params = {
@@ -105,7 +93,7 @@ class test_export_to_tflite(unittest.TestCase):
         with open("dataset/data/test/test-params.pk", 'rb') as f:
             hyperparams = pickle.load(f)
         
-        model = CustomLSTM(hidden_size=hyperparams["num_sensors"], out_size=hyperparams["n_tgt_win"]*hyperparams["seq_len"], **hyperparams).to(
+        model = CustomLSTM(input_size=hyperparams["num_sensors"], out_size=hyperparams["n_tgt_win"]*hyperparams["seq_len"], **hyperparams).to(
     device=device, non_blocking=True)
         
         checkpoint = torch.load(

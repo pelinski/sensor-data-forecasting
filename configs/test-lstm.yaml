@@ -1,11 +1,12 @@
 model: "lstm"
-dataset: "dataset/data/chaos-bells-3/processed/RX0"
+dataset: "dataset/data/chaos-bells-4/processed/RX0"
 num_sensors: 2
-epochs: 20
+hidden_size: 32
+epochs: 2
 learning_rate: 0.001
 optimizer: "adam"
-seq_len: 512
-n_tgt_win: 1
+seq_len: 10
+n_tgt_win: 2
 batch_size: 64
 dropout: 0.2
 save_and_plot_period: 1
