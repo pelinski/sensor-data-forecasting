@@ -51,8 +51,8 @@ test_loader = DataLoader(
 # Model, criterion and optimizer
 model, epoch_init = load_model(hyperparams)
 optimizer = load_optimizer(model, hyperparams)
-criterion = torch.nn.L1Loss(reduction='mean')
-scheduler = load_scheduler(hyperparams, optimizer)
+criterion = torch.nn.MSELoss(reduction='mean')
+# scheduler = load_scheduler(hyperparams, optimizer)
 
 # get windows with hits
 threshold = 0.55
@@ -78,19 +78,19 @@ for epoch in range(epoch_init, hyperparams["epochs"]+1):
         targets = targets.to(device=device, non_blocking=True)[
             :, :, 1:]  # remove piezo stick
 
-        out = model(data)
-        train_loss = criterion(out, targets)
-        train_it_losses = np.append(train_it_losses, train_loss.item())
-
         # update
         optimizer.zero_grad(set_to_none=True)  # lower memory footprint
+        out = model(data)
+        train_loss = torch.sqrt(criterion(out, targets))
+        train_it_losses = np.append(train_it_losses, train_loss.item())
         train_loss.backward()
         optimizer.step()
-        scheduler.step()
+        # scheduler.step()
 
     # bokeh plot of some batches every hyperparams["save_and_plot_period"] epochs, save model
     if hyperparams["save_and_plot_period"] and epoch % hyperparams["save_and_plot_period"] == 0:
-        save_model(model, optimizer, scheduler, hyperparams, epoch)
+        # save_model(model, optimizer, hyperparams, epoch,  scheduler)
+        save_model(model, optimizer, hyperparams, epoch)
         inputs = torch.Tensor(
             train_dataset.dataset.inputs[train_windows_with_hits]).to(device=device)
         targets = torch.Tensor(
@@ -110,7 +110,7 @@ for epoch in range(epoch_init, hyperparams["epochs"]+1):
             :, :, 1:]  # remove piezo stick
 
         out = model.predict(data)  # using predict method to avoid backprop
-        validation_loss = criterion(out, targets)
+        validation_loss = torch.sqrt(criterion(out, targets))
         validation_it_losses = np.append(
             validation_it_losses, validation_loss.item())
 

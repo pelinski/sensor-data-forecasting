@@ -35,9 +35,9 @@ def load_hyperparams():
     parser.add_argument(
         "--optimizer", help="optimizer algorithm", default='sgd', type=str)
     parser.add_argument(
-        "--lr_scheduler_step_size", help="learning rate scheduler step size", default=50, type=int)
+        "--lr_scheduler_step_size", help="learning rate scheduler step size", default=None, type=int)
     parser.add_argument(
-        "--lr_scheduler_gamma", help="learning rate scheduler gamma", default=0.1, type=float)
+        "--lr_scheduler_gamma", help="learning rate scheduler gamma", default=None, type=float)
     parser.add_argument(
         "--epochs", help="number of training epochs", default=1, type=int)
     parser.add_argument("--d_model", help="model dimension",

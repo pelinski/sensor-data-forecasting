@@ -44,7 +44,7 @@ class CustomLSTM(nn.Module):  # short version using matrices
         for weight in self.parameters():
             weight.data.uniform_(-stdv, stdv)
 
-        # init weights in linear layers in
+        #init weights in linear layers out
         self.fc1.bias.data.zero_()
         self.fc1.weight.data.uniform_(-stdv, stdv)
         self.fc2.bias.data.zero_()
@@ -110,8 +110,8 @@ class CustomLSTM(nn.Module):  # short version using matrices
         # # project into out_size
         if self.out_size != self.seq_len:  # if more than 1 tgt window, project sequence into out_size
             out = out.permute(0, 2, 1)  # (batch_size, hidden_size, seq_len)
-            out = self.fc1(out)  # (batch_size, hidden_size, out_size)
-            out = self.relu(out)  # (batch_size, hidden_size, out_size)
+            out = self.fc1(out)  # (batch_size, hidden_size, d_model)
+            out = self.relu(out)  # (batch_size, hidden_size, d_model)
             out = self.fc2(out)  # (batch_size, hidden_size, out_size)
             # out = self.relu(out)
             out = out.permute(0, 2, 1)  # (batch_size, out_size, hidden_size)
