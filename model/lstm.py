@@ -101,19 +101,20 @@ class CustomLSTM(nn.Module):  # short version using matrices
                                           1).contiguous()  # (batch_size, sequence_length, hidden_size). contiguous returns a tensor contiguous in memory
 
         # (batch_size, seq_len, hidden_size)
-        out = self.relu(hidden_seq)
+        # out = self.relu(hidden_seq) 
         
         # last predicted output contains information of the previous outputs
-        last_out = out[:,-1,:] # (batch_size, hidden_size)
+        out = hidden_seq[:,-1,:] # (batch_size, hidden_size)
 
         # project hidden_size into out_size
-        y = self.dense(last_out)  # (batch_size, out_size)
+        out= self.dense(out)  # (batch_size, out_size)
         
-        y = self.relu(y)  # (batch_size, out_size)
-        y = self.dropout(y) # (batch_size, out_size)
-        y = y.unsqueeze(2) # (batch_size, out_size, 1) --> for compatibility with transformer
+        # out= self.relu(out)  # (batch_size, out_size) 
+        # out= self.dropout(out) # (batch_size, out_size)
+        
+        out= out.unsqueeze(2) # (batch_size, out_size, 1) --> for compatibility with transformer
 
-        return y
+        return out
 
     def predict(self, x, init_states=None, return_states=False):
         """LSTM predict method
