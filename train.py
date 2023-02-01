@@ -75,13 +75,12 @@ for epoch in range(epoch_init, hyperparams["epochs"]+1):
         # (batch_size, seq_length, input_size)
         data = data.to(device=device, non_blocking=True)
         # (batch_size, seq_length, out_size)
-        targets = targets.to(device=device, non_blocking=True)[
-            :, :, 1:]  # remove piezo stick
+        targets = targets.to(device=device, non_blocking=True)[:,:,1:]  # remove piezo stick
 
         # update
         optimizer.zero_grad(set_to_none=True)  # lower memory footprint
         out = model(data)
-        train_loss = torch.sqrt(criterion(out, targets))
+        train_loss = torch.sqrt(criterion(out,targets))
         train_it_losses = np.append(train_it_losses, train_loss.item())
         train_loss.backward()
         optimizer.step()

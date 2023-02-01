@@ -28,6 +28,8 @@ def load_hyperparams():
                         default=1, type=int)
     parser.add_argument("--seq_len", help="maximum sequence length",
                         default=12, type=int)
+    parser.add_argument("--hidden_size", help="lstm hidden_size",
+                        default=32, type=int)
     parser.add_argument("--batch_size", help="batch size",
                         default=32, type=int)
     parser.add_argument("--learning_rate",
@@ -83,7 +85,6 @@ def load_hyperparams():
                    "epochs": hp["epochs"] if "epochs" in hp else args.epochs,
                    "batch_size": hp["batch_size"] if "batch_size" in hp else args.batch_size,
                    "seq_len": hp["seq_len"] if "seq_len" in hp else args.seq_len,
-                   "d_model": hp["d_model"] if "d_model" in hp else args.d_model,
                    "dropout": hp["dropout"] if "dropout" in hp else args.dropout,
                    "learning_rate": hp["learning_rate"] if "learning_rate" in hp else args.learning_rate,
                    "optimizer": hp["optimizer"] if "optimizer" in hp else args.optimizer,
@@ -96,12 +97,18 @@ def load_hyperparams():
                    "device": torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')}
     if hyperparams["model"] == "transformer":
         hyperparams.update(
-            {"embedding_size_src": hp["embedding_size_src"] if "embedding_size_src" in hp else args.embedding_size_src,
+            {"d_model": hp["d_model"] if "d_model" in hp else args.d_model,
+             "embedding_size_src": hp["embedding_size_src"] if "embedding_size_src" in hp else args.embedding_size_src,
              "embedding_size_tgt": hp["embedding_size_tgt"] if "embedding_size_tgt" in hp else args.embedding_size_tgt,
              "num_heads": hp["num_heads"] if "num_heads" in hp else args.n_heads,
              "dim_feedforward": hp["dim_feedforward"] if "dim_feedforward" in hp else args.dim_feedforward,
              "num_encoder_layers": hp["num_encoder_layers"] if "num_encoder_layers" in hp else args.num_encoder_layers,
              }
+        )
+    if hyperparams["model"] == "lstm":
+        hyperparams.update(
+            {"hidden_size": hp["hidden_size"]
+                if "hidden_size" in hp else args.hidden_size}
         )
 
     return dict(hyperparams)
@@ -122,7 +129,7 @@ def load_model(hyperparams, root=None):
         'cuda') if torch.cuda.is_available() else torch.device('cpu')
 
     if hyperparams["model"] == "lstm":
-        model = CustomLSTM(hidden_size=hyperparams["num_sensors"], out_size=hyperparams["n_tgt_win"]*hyperparams["seq_len"], **hyperparams).to(
+        model = CustomLSTM(input_size=hyperparams["num_sensors"], out_size=hyperparams["n_tgt_win"]*hyperparams["seq_len"], **hyperparams).to(
             device=device, non_blocking=True)
     elif hyperparams["model"] == "transformer":
         model = TransformerEncoder(out_size=hyperparams["n_tgt_win"]*hyperparams["seq_len"],

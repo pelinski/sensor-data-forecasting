@@ -14,15 +14,15 @@ parameters:
   dataset:
     value: "dataset/data/chaos-bells-4/processed/RX0"
   seq_len:
-    value: 512
+    value: 32
   n_tgt_win:
     value: 3
   num_sensors:
     value: 2
   batch_size:
     values: [16, 32, 64, 128, 256, 512]
-  d_model:
-    values: [16, 32, 64, 128, 256, 512]
+  hidden_size:
+    values: [16, 32, 64, 128]
   optimizer:
     values: ["sgd", "adam"]
   learning_rate:
@@ -32,7 +32,7 @@ parameters:
   epochs:
     value: 500
   save_and_plot_period:
-    value: 20
+    value: 10
   plot_number:
     value: 10
   dropout:
