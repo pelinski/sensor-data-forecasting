@@ -5,16 +5,12 @@ name = "pypi"
 
 [packages]
 tqdm = "*"
-wandb = "==0.12.21"
 pprintpp = "*"
-bokeh = "==2.4.3"
 bela-data-syncer = {editable = true, git = "https://github.com/pelinski/bela-data-syncer"}
 tinyneuralnetwork = {git = "https://github.com/alibaba/TinyNeuralNetwork.git"}
 numpy = "==1.23.1"
-igraph = "*"
 
 [dev-packages]
-jupyter-bokeh = "*"
 autopep8 = "*"
 
 [requires]

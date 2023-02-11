@@ -7,4 +7,5 @@ dev/
 dataset/data/*/
 !dataset/data/test/
 *.tflite
+*.model
 trained_models/
