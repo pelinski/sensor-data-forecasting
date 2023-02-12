@@ -1,37 +1,28 @@
-# sensor-data-forecasting
+# 3 - Model training (in host)
 
-This code loads a dataset collected using [bela-data-logger](https://github.com/pelinski/bela-data-logger) and [bela-data-syncer](https://github.com/pelinski/bela-data-syncer) and trains a neural network for next sample prediction. For now, it is only possible to train an lstm.
+This code loads the dataset recorded and processed in steps 1 and 2, trains a simple LSTM network on this data using Pytorch and exports the model into Tensorflow Lite. 
 
-## Usage
+## Instructions
 
-You can create an environment with the necessary dependencies using pipenv:
+1. First, you need to create an environment with the necessary dependencies using pipenv: 
 
-```bash
-pipenv install
-```
+    ```
+    pipenv install
+    ```
 
-You will also need to manually install torch:
+    You will also need to manually install torch and tensorflow:
 
-```
-pipenv run pip3 install torch
-```
+    ```
+    pipenv run pip3 install torch
+    ```
 
-and tensorflow if you want to convert the model to tensorflow:
+    ```
+    pip env run pip install tensorflow
+    ```
 
-```bash
-pip env run pip install tensorflow
-```
-
-You can sync data coming from multiple Belas using the script in `data/process-data-multi.py`. If you have data coming only from one Bela, you can process it using `process-data-single.py`.
-
-Once the dataset is processed, you can modify the necessary paths in `train.py` and run the training script by typing:
-
-```bash
-pipenv run python train.py
-```
-
-The training and model parameters can be modified by passing `.yaml` files to the wandb config:
-
-```bash
-pipenv run python train.py --config configs/test-trans.yaml
-```
+2. Copy the processed dataset files into the folder `dataset/`.
+3. You can now train the model by running: 
+    ```bash
+    pipenv run python train.py
+    ```
+    The model will be exported automatically when the training finishes. 
